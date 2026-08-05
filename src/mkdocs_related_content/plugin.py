@@ -7,14 +7,10 @@
 # standard library
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 # 3rd party
-from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.plugins import BasePlugin, get_plugin_logger
-from mkdocs.structure.files import Files
-from mkdocs.structure.nav import Navigation
-from mkdocs.structure.pages import Page
 
 # package modules
 from src.mkdocs_related_content.config import RelatedContentPluginConfig
@@ -22,8 +18,15 @@ from src.mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
 from src.mkdocs_related_content.integrations.theme_material_tags import (
     IntegrationMaterialTags,
 )
-from src.mkdocs_related_content.models import PageTagsEntry
 from src.mkdocs_related_content.util import Util
+
+if TYPE_CHECKING:
+    from mkdocs.config.defaults import MkDocsConfig
+    from mkdocs.structure.files import Files
+    from mkdocs.structure.nav import Navigation
+    from mkdocs.structure.pages import Page
+
+    from src.mkdocs_related_content.models import PageTagsEntry
 
 # ############################################################################
 # ########## Globals #############

@@ -4,10 +4,12 @@
 # ########## Libraries #############
 # ##################################
 
+# standard
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 # 3rd party
-from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.plugins import get_plugin_logger
 
 # package
@@ -15,6 +17,9 @@ from src.mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
 from src.mkdocs_related_content.integrations.theme_material_base import (
     IntegrationMaterialThemeBase,
 )
+
+if TYPE_CHECKING:
+    from mkdocs.config.defaults import MkDocsConfig
 
 # ############################################################################
 # ########## Globals #############
