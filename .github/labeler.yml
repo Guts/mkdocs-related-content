@@ -1,0 +1,55 @@
+bug:
+  - head-branch:
+      - ^fix
+      - fix
+      - ^hotfix
+      - hotfix
+
+ci-cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - pyproject.toml
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.md"
+          - docs/**
+  - head-branch:
+      - ^docs
+      - documentation
+
+enhancement:
+  - head-branch:
+      - ^feature
+      - feature
+      - ^improve
+      - improve
+
+packaging:
+  - changed-files:
+      - any-glob-to-any-file:
+          - MANIFEST.in
+  - head-branch:
+      - ^packaging
+      - packaging
+
+quality:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**/*
+
+tooling:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".*"
+          - codecov.yml
+          - .vscode/**/*
+  - head-branch:
+      - ^tooling
+      - tooling

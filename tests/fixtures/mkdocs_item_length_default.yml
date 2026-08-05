@@ -1,0 +1,24 @@
+# Project information
+site_name: MkDocs RSS Plugin - TEST
+site_description: Basic setup to test against MkDocs RSS plugin
+site_author: Julien Moura (Guts)
+site_url: https://guts.github.io/mkdocs-related-content
+copyright: "Guts - In Geo Veritas"
+
+# Repository
+repo_name: "guts/mkdocs-related-content"
+repo_url: "https://github.com/guts/mkdocs-related-content"
+
+docs_dir: docs
+
+use_directory_urls: true
+
+plugins:
+  - rss
+
+theme:
+  name: readthedocs
+
+# Extensions to enhance markdown
+markdown_extensions:
+  - meta
