@@ -1,11 +1,9 @@
-site_name: Test RSS Plugin
-# site_description: Test RSS Plugin
-site_url: https://guts.github.io/mkdocs-related-content
-
-use_directory_urls: true
+site_name: Test Related Content Plugin
+site_url: https://example.org/
 
 plugins:
-    - rss
+  - related-content
 
 theme:
-    name: mkdocs
+  name: mkdocs
+  custom_dir: overrides

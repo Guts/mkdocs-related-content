@@ -1,0 +1,16 @@
+site_name: Test Related Content Plugin
+site_url: https://example.org/
+
+plugins:
+  - tags:
+      tags_allowed:
+        - api
+        - auth
+        - python
+        - oauth
+        - gardening
+        - demo
+  - related-content
+
+theme:
+  name: materialx

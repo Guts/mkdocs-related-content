@@ -2,8 +2,9 @@ site_name: Test Related Content Plugin
 site_url: https://example.org/
 
 plugins:
+  - tags
   - related-content:
-      enabled: false
+      use_material_tags: false
 
 theme:
-  name: mkdocs
+  name: materialx

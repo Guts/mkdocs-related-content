@@ -3,7 +3,7 @@ site_url: https://example.org/
 
 plugins:
   - related-content:
-      enabled: false
+      export_tags_json: false
 
 theme:
   name: mkdocs

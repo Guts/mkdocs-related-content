@@ -4,9 +4,8 @@
 
 .. code-block:: python
 
-    # for whole test
+    # for whole test module
     python -m unittest tests.test_config
-
 """
 
 # #############################################################################
@@ -15,154 +14,96 @@
 
 # Standard library
 import unittest
-from datetime import datetime
 from pathlib import Path
 
 # 3rd party
 from mkdocs.config.base import Config
 
-from mkdocs_related_content.config import RssPluginConfig
-
 # plugin target
-from mkdocs_related_content.constants import DEFAULT_CACHE_FOLDER
-from mkdocs_related_content.plugin import GitRssPlugin
+from mkdocs_related_content_plugin.config import RelatedContentPluginConfig
+from mkdocs_related_content_plugin.constants import (
+    DEFAULT_MAX_RELATED,
+    DEFAULT_MIN_SCORE,
+    DEFAULT_SECTION_TITLE,
+    DEFAULT_TAGS_JSON_FILENAME,
+)
+from mkdocs_related_content_plugin.plugin import RelatedContentPlugin
 
 # test suite
 from tests.base import BaseTest
 
-
 # #############################################################################
 # ########## Classes ###############
 # ##################################
+
+
 class TestConfig(BaseTest):
     """Test plugin configuration."""
 
-    # -- Standard methods --------------------------------------------------------
     @classmethod
     def setUpClass(cls):
         """Executed when module is loaded before any test."""
-        cls.config_files = sorted(Path("tests/fixtures/").glob("**/mkdocs_*.yml"))
-        cls.feed_image = "https://github.com/Guts/mkdocs-related-content/blob/main/docs/assets/logo_rss_plugin_mkdocs.png?raw=true"
-
-    def setUp(self):
-        """Executed before each test."""
-        pass
-
-    def tearDown(self):
-        """Executed after each test."""
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        """Executed after the last test."""
-        pass
+        cls.fixtures_dir = Path("tests/fixtures/")
 
     # -- TESTS ---------------------------------------------------------
     def test_plugin_config_defaults(self):
-        # default reference
+        """An un-configured plugin instance falls back to documented defaults."""
         expected = {
-            "abstract_chars_count": 160,
-            "abstract_delimiter": "<!-- more -->",
-            "categories": None,
-            "cache_dir": f"{DEFAULT_CACHE_FOLDER.resolve()}",
-            "comments_path": None,
-            "date_from_meta": {
-                "as_creation": "git",
-                "as_update": "git",
-                "datetime_format": "%Y-%m-%d %H:%M",
-                "default_time": datetime.min.strftime("%H:%M"),
-                "default_timezone": "UTC",
-            },
             "enabled": True,
-            "feed_description": None,
-            "feed_title": None,
-            "feed_ttl": 1440,
-            "image": None,
-            "json_feed_enabled": True,
-            "atom_feed_enabled": True,  # Add this line
-            "length": 20,
-            "match_path": ".*",
-            "feeds_filenames": {
-                "json_created": "feed_json_created.json",
-                "json_updated": "feed_json_updated.json",
-                "rss_created": "feed_rss_created.xml",
-                "rss_updated": "feed_rss_updated.xml",
-                "atom_created": "feed_atom_created.xml",  # Add this line
-                "atom_updated": "feed_atom_updated.xml",  # Add this line
-            },
-            "pretty_print": False,
-            "stylesheet": "auto",
-            "rss_feed_enabled": True,
-            "url_parameters": None,
-            "use_git": True,
-            "use_material_blog": True,
-            "use_material_social_cards": True,
+            "section_title": DEFAULT_SECTION_TITLE,
+            "max_related": DEFAULT_MAX_RELATED,
+            "min_score": DEFAULT_MIN_SCORE,
+            "use_material_tags": True,
+            "export_tags_json": True,
+            "tags_json_filename": DEFAULT_TAGS_JSON_FILENAME,
         }
 
-        # load
-        plugin = GitRssPlugin()
+        plugin = RelatedContentPlugin()
         errors, warnings = plugin.load_config({})
-        self.assertIsInstance(plugin.config, RssPluginConfig)
+
+        self.assertIsInstance(plugin.config, RelatedContentPluginConfig)
         self.assertIsInstance(plugin.config, Config)
         self.assertEqual(plugin.config, expected)
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
-    def test_plugin_config_image(self):
-        # reference
-        expected = {
-            "abstract_chars_count": 160,
-            "abstract_delimiter": "<!-- more -->",
-            "cache_dir": f"{DEFAULT_CACHE_FOLDER.resolve()}",
-            "categories": None,
-            "comments_path": None,
-            "date_from_meta": {
-                "as_creation": "git",
-                "as_update": "git",
-                "datetime_format": "%Y-%m-%d %H:%M",
-                "default_time": datetime.min.strftime("%H:%M"),
-                "default_timezone": "UTC",
-            },
-            "enabled": True,
-            "feed_description": None,
-            "feed_title": None,
-            "feed_ttl": 1440,
-            "image": self.feed_image,
-            "json_feed_enabled": True,
-            "length": 20,
-            "match_path": ".*",
-            "feeds_filenames": {
-                "json_created": "feed_json_created.json",
-                "json_updated": "feed_json_updated.json",
-                "rss_created": "feed_rss_created.xml",
-                "rss_updated": "feed_rss_updated.xml",
-            },
-            "pretty_print": False,
-            "stylesheet": "auto",
-            "rss_feed_enabled": True,
-            "url_parameters": None,
-            "use_git": True,
-            "use_material_blog": True,
-            "use_material_social_cards": True,
+    def test_plugin_config_custom_options(self):
+        """Custom options passed in mkdocs.yml override the defaults."""
+        custom_cfg = {
+            "section_title": "Voir aussi",
+            "max_related": 1,
+            "min_score": 0.5,
+            "tags_json_filename": "custom-tags.json",
         }
 
-        # custom config
-        custom_cfg = {"image": self.feed_image}
-
-        # load
-        plugin = GitRssPlugin()
+        plugin = RelatedContentPlugin()
         errors, warnings = plugin.load_config(custom_cfg)
-        self.assertIsInstance(plugin.config, RssPluginConfig)
-        self.assertIsInstance(plugin.config, Config)
-        self.assertEqual(plugin.config, expected)
+
+        self.assertEqual(plugin.config.section_title, "Voir aussi")
+        self.assertEqual(plugin.config.max_related, 1)
+        self.assertEqual(plugin.config.min_score, 0.5)
+        self.assertEqual(plugin.config.tags_json_filename, "custom-tags.json")
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
+    def test_plugin_config_disabled(self):
+        """`enabled: false` is honored and surfaced on the loaded config."""
+        plugin = RelatedContentPlugin()
+        errors, warnings = plugin.load_config({"enabled": False})
+
+        self.assertFalse(plugin.config.enabled)
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
     def test_plugin_config_through_mkdocs(self):
-        for config_filepath in self.config_files:
-            print(config_filepath)
-            plg_cfg = self.get_plugin_config_from_mkdocs(config_filepath, "rss")
-            self.assertIsInstance(plg_cfg, Config)
+        """Every fixture mkdocs.yml loads without raising, through Mkdocs itself."""
+        config_files = sorted(self.fixtures_dir.glob("mkdocs_*.yml"))
+        self.assertGreater(len(config_files), 0, "No mkdocs.yml fixture found")
+
+        for config_filepath in config_files:
+            with self.subTest(config_file=config_filepath.name):
+                plg_cfg = self.get_plugin_config_from_mkdocs(config_filepath)
+                self.assertIsInstance(plg_cfg, Config)
 
 
 # ##############################################################################
