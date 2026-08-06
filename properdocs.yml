@@ -131,6 +131,7 @@ plugins:
 
 theme:
   name: materialx
+  favicon: material/vector-link
   features:
     - content.action.edit
     - content.action.view
@@ -152,7 +153,7 @@ theme:
     text: Ubuntu
   icon:
     edit: material/pencil
-    logo: simple/rss
+    logo: material/vector-link
     view: material/eye
     tag:
       default: fontawesome/solid/tag
