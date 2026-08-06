@@ -252,6 +252,6 @@ pyrightconfig.json
 # ################################
 
 **/*.xml
-mkdocs_related_content/_version.py
+src/mkdocs_related_content/_version.py
 site/
 tests/fixtures/docs/temp_page_not_in_git_log.md

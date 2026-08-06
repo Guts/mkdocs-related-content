@@ -61,7 +61,7 @@ test = [
 ]
 
 [project.entry-points."mkdocs.plugins"]
-related_content = "src.mkdocs_related_content.plugin:RelatedContentPlugin"
+related-content = "mkdocs_related_content.plugin:RelatedContentPlugin"
 
 [project.urls]
 Changelog = "https://github.com/guts/mkdocs-related-content/blob/main/CHANGELOG.md"
@@ -205,17 +205,14 @@ testpaths = ["tests"]
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.package-data]
-mkdocs_related_content = ["templates/*.jinja2"]
-
 [tool.setuptools.packages.find]
 include = ["mkdocs_related_content"]
 namespaces = false
-where = ["."]
+where = ["src"]
 
 # setuptools-scm configuration
 [tool.setuptools_scm]
 fallback_version = "0.0.0+unknown"
 local_scheme = "no-local-version"
 version_scheme = "guess-next-dev"
-write_to = "mkdocs_related_content/_version.py"
+write_to = "src/mkdocs_related_content/_version.py"
