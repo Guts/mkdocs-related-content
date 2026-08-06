@@ -14,7 +14,7 @@ from pathlib import Path
 MKDOCS_LOGGER_NAME: str = "[related-content]"
 
 # default plugin option values
-DEFAULT_SECTION_TITLE: str = "Contenus liés"
+DEFAULT_SECTION_TITLE: str = "Related contents"
 DEFAULT_MAX_RELATED: int = 5
 DEFAULT_MIN_SCORE: float = 0.1
 DEFAULT_TAGS_JSON_FILENAME: str = "related-tags.json"
