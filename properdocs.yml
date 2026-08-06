@@ -1,14 +1,14 @@
-# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+# yaml-language-server: $schema=https://jaywhj.github.io/mkdocs-materialx/schema.json
 
 # Project information
 site_name: MkDocs Related Contents Plugin
 site_description: Documentation about the MkDocs Related Content Plugin
-site_author: dev@ingeoveritas.com (Julien M. )
-site_url: https://guts.github.io/mkdocs-rss-plugin/
+site_author: dev@ingeoveritas.com (Julien M.)
+site_url: https://guts.github.io/mkdocs-related-content/
 copyright: "Guts - In Geo Veritas (MIT)"
 
 # Repository
-repo_name: guts/mkdocs-rss-plugin
+repo_name: guts/mkdocs-related-content
 repo_url: https://github.com/guts/mkdocs-related-content/
 edit_uri: blob/main/docs/
 
@@ -68,7 +68,7 @@ nav:
 plugins:
   - git-committers:
       enabled: !ENV [MKDOCS_ENABLE_PLUGIN_GIT_COMMITTERS, true]
-      repository: guts/mkdocs-rss-plugin
+      repository: guts/mkdocs-related-content
       branch: main
       docs_path: docs/
       cache_dir:
@@ -119,7 +119,7 @@ plugins:
       use_git: true
       use_material_social_cards: true
   - search:
-      lang: en
+      provider: pagefind
   - social:
       enabled: !ENV [MKDOCS_ENABLE_PLUGIN_SOCIAL, true]
       cache_dir: !ENV [MKDOCS_PLUGIN_SOCIAL_CACHE_DIR, .cache/plugins/social]
