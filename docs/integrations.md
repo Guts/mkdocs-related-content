@@ -1,168 +1,51 @@
 ---
 title: Integrations
-icon: octicons/plug-16
+description: How the Related Content plugin integrates with MaterialX/Material's built-in tags plugin
+tags:
+  - integrations
+  - materialx
+  - material
+  - tags
 ---
 
-Since version 1.19, the plugin supports both [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/) (which is in maintenance mode since Nov 11, 2025 and until November 2026) and its fork [MaterialX](https://jaywhj.github.io/mkdocs-materialx/).
+## MaterialX / Material `tags` plugin
 
-## Blog plugin (from Material theme)
+If your `mkdocs.yml` uses `theme.name: materialx` (supported) or `theme.name: material` (unsupported since it's unmaintained), and declares the built-in `tags` plugin, this plugin detects it automatically. No configuration needed beyond [`use_material_tags`](configuration.md#plugin-options), which is `true` by default.
 
-Since version 1.17, the plugin integrates with the [Blog plugin (shipped with Material theme)](https://squidfunk.github.io/mkdocs-material/plugins/blog/) (see also [the tutorial about blog + RSS  plugins](https://squidfunk.github.io/mkdocs-material/tutorials/blogs/engage/)).
-
-In some cases, the RSS plugin needs to work with the Material Blog:
-
-- for blog posts, the structure of the path to social cards is depending on blog configuration
-- retrieve the author's name from the `.authors.yml` file
-- optionnaly retrieve the author's email from the `.authors.yml` file
-
-If you don't want this integration, you can disable it with the option: `use_material_blog=false`.
-
-> See [related section in settings](./configuration.md#use_material_blog).
-
-### Example of blog authors with email
-
-```yaml title="docs/blog/.authors.yml"
-authors:
-  alexvoss:
-    name: Alex Voss
-    description: Weltenwanderer
-    avatar: https://github.com/alexvoss.png
-  guts:
-    avatar: https://cdn.geotribu.fr/img/internal/contributeurs/jmou.jfif
-    description: GIS Watchman
-    name: Julien Moura
-    url: https://github.com/guts/
-    email: joe@biden.com
-```
-
-This given Markdown post:
-
-```markdown title="blog/posts/demo.md"
----
-authors:
-  - alexvoss
-  - guts
-date: 2024-12-02
-categories:
-  - tutorial
----
-
-# Demonstration blog post
-
-[...]
-```
-
-Will be rendered as:
-
-```xml title="/build/site/feed_rss_created.xml"
-[...]
-        <item>
-            <title>Demonstration blog post</title>
-            <author>Alex Voss</author>
-            <author>Julien Moura (joe@biden.com)</author>
-[...]
-```
-
-----
-
-## Social Cards plugin (from Material theme)
-
-Since version 1.10, the plugin integrates with the [Social Cards plugin (shipped with Material theme)](https://squidfunk.github.io/mkdocs-material/setup/setting-up-social-cards/) (see also [the full plugin documentation here](https://squidfunk.github.io/mkdocs-material/plugins/social/)).
-
-Here's how the RSS plugin prioritizes the image to be used in the feed:
-
-1. an image (local path or URL) is defined in the page's YAML header of the page with the key `image`. Typically: `image: path_or_url_to_image.webp`.
-1. an image (local path or URL) is defined in the page's YAML header with the key `illustration`. Typically: `illustration: path_or_url_to_image.webp`.
-1. if neither is defined, but both the social plugin and the cards option are enabled, then the social card image is used.
-
-If you don't want this integration, you can disable it with the option: `use_material_social_cards=false`.
-
-> See [related section in settings](./configuration.md#use_material_social_cards).
-
-----
-
-## Reference RSS feeds in HTML meta-tags
-
-To facilitate the discovery of RSS feeds, it's recommended to add relevant meta-tags in `<head>` section in HTML pages.
-
-### Automatically set with Material theme
-
-If you're using the Material theme, everything is automagically set up (see [the related documentation page](https://squidfunk.github.io/mkdocs-material/setup/setting-up-a-blog/#rss)) :partying_face:.
-
-### Manually { #feed-discovery-manual-rss }
-
-You need to customize the theme's template. Typically, in `main.html`:
-
-```html
-{% extends "base.html" %}
-
-{% block extrahead %}
-  <!-- RSS Feed -->
-  <link rel="alternate" type="application/rss+xml" title="RSS feed of created content" href="{{ config.site_url }}feed_rss_created.xml">
-  <link rel="alternate" type="application/rss+xml" title="RSS feed of updated content" href="{{ config.site_url }}feed_rss_updated.xml">
-{% endblock %}
-```
-
-----
-
-## Reference JSON feeds in HTML meta-tags
-
-To facilitate the discovery of JSON feeds, it's [recommended](https://www.jsonfeed.org/version/1.1/#discovery-a-name-discovery-a) to add relevant meta-tags in `<head>` section in HTML pages.
-
-### Manually { #feed-discovery-manual-json }
-
-You need to customize the theme's template. Firstly, you need to declare the folder where you store your template overrides:
-
-```yaml title="mkdocs.yml"
-[...]
+```yaml
 theme:
-  name: material
-  custom_dir: docs/theme/overrides
+  name: materialx # or: material
 [...]
+plugins:
+  - tags
+  - related-content
 ```
 
-Then add a `main.html` inside:
+### What gets reused, and what doesn't
 
-```jinja title="docs/theme/overrides/main.html"
-{% extends "base.html" %}
+It would be natural to expect this plugin to simply read `tags.json`, the file the `tags` plugin can export. It doesn't, and this is a deliberate, tested consequence of MkDocs' build lifecycle rather than a missing feature:
 
-{% block extrahead %}
-{# JSON Feed #}
-{% if "rss" in config.plugins %}
-<link
-  rel="alternate"
-  type="application/feed+json"
-  title="JSON feed" href="{{ 'feed_json_created.json' | url }}"
-  />
-<link
-  rel="alternate"
-  type="application/feed+json"
-  title="JSON feed of updated content"
-  href="{{ 'feed_json_updated.json' | url }}" />
-{% endif %}
-{% endblock %}
+The `tags` plugin builds its page/tag mapping - and `tags.json` - incrementally, finishing only once every page has been processed (`on_post_build`). A page's own Jinja context, however, is built earlier, while pages are still being processed one by one. `tags.json` (and the `tags` plugin's internal mapping) is only complete *after* every page's HTML has already been rendered - too late to use for filling in that page's `related_pages`.
+
+What *is* available at any point of the build is the `tags` plugin's static **configuration** - in particular `tags_allowed`, the optional allow-list of valid tag names. This plugin reads it (when `use_material_tags` is enabled) and applies the same filter to its own, independently-computed tag index, so a page's `related_pages` never includes a tag that wouldn't appear on the MaterialX/Material tags index page either.
+
+!!! note "A note on `tags_allowed` and `Tag` objects"
+    MaterialX/Material's `tags_allowed` setting doesn't hold plain strings: it validates into a `set` of the theme's own `Tag` objects, whose `__eq__` only compares against other `Tag` instances - comparing one to a plain Python `str` raises an `AssertionError` rather than returning `False`. This plugin normalizes them to their string names before using them, so this stays an implementation detail you never have to think about.
+
+### Avoiding a duplicate `tags.json`
+
+When both the theme's own `tags` plugin and `export_tags_json` (on by default here) are active, this plugin checks whether the `tags` plugin already exports its own JSON, and skips its own fallback export in that case - see [`export_tags_json`](configuration.md#plugin-options).
+
+```yaml
+plugins:
+  - tags # exports its own tags.json
+  - related-content # -> no related-tags.json written, avoids a duplicate
 ```
 
-If your `main.html` is getting too large, or if you like to modularize anything with more than 3 lines, you can also put this configuration in a separated `partials` file:
+Without the `tags` plugin (or with a different theme entirely), this plugin exports its own JSON at `site_dir/related-tags.json` by default, shaped the same way (`{"mappings": [{"item": {"url": ..., "title": ...}, "tags": [...]}]}`), for anyone who wants to reuse it (e.g. a client-side search widget).
 
-```jinja title="content/theme/partials/json_feed.html.jinja2"
-{# JSON Feed #}
-{% if "rss" in config.plugins %}
-<link
-  rel="alternate"
-  type="application/feed+json"
-  title="JSON feed" href="{{ 'feed_json_created.json' | url }}"
-  />
-<link
-  rel="alternate"
-  type="application/feed+json"
-  title="JSON feed of updated content"
-  href="{{ 'feed_json_updated.json' | url }}" />
-{% endif %}
-```
+----
 
-And include it in `main.html`:
+## Any other theme
 
-```jinja title="docs/theme/overrides/main.html"
-{% include "partials/json_feed.html.jinja2" %}
-```
+Without MaterialX/Material's `tags` plugin, or with a different theme entirely, the plugin works exactly the same way, just without the `tags_allowed` alignment: every tag found in a page's frontmatter is considered valid.

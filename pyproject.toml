@@ -44,11 +44,15 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ruff>=0.15.22",
+    "ruff>=0.16.1",
     "pre-commit>=4.6.1,<5",
 ]
 docs = [
+    "mkdocs-git-committers-plugin-2>=2.4.1,<2.6",
     "mkdocs-materialx[imaging]>=10.2.0,<11",
+    "mkdocstrings-python>=1.16.2,<2.1",
+    "mkdocs-rss-plugin",
+    "termynal>=0.12.2,<0.15",
 
 ]
 test = [

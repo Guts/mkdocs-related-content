@@ -1,87 +1,90 @@
 ---
-title: The MkDocs RSS Plugin
-authors:
-  - dev@ingeoveritas.com (Julien Moura)
-  - vinktim@gmail.com (Tim Vink)
-date: 2020-07-06
-description: "MkDocs RSS plugin: generate RSS and JSON feeds for your static website using git log ad YAML frontmatter (markdown pages'metadata header)."
-image: "assets/rss_icon.svg"
+title: The MkDocs Related Content Plugin
+description: "Automatically compute and display related pages based on shared tags, for any MkDocs site."
 tags:
-  - JSON Feed
+  - tags
   - Mkdocs
   - plugin
-  - RSS
+  - related content
 ---
 
-[![PyPi version badge](https://badgen.net/pypi/v/mkdocs-related-content)](https://pypi.org/project/mkdocs-related-content/)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/mkdocs-related-content)](https://pypi.org/project/mkdocs-related-content/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mkdocs-related-content)](https://pypi.org/project/mkdocs-related-content/)
-
-[![codecov](https://codecov.io/gh/Guts/mkdocs-related-content/branch/main/graph/badge.svg?token=A0XPLKiwiW)](https://codecov.io/gh/Guts/mkdocs-related-content)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![flake8](https://img.shields.io/badge/linter-flake8-green)](https://flake8.pycqa.org/)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Guts/mkdocs-related-content/master.svg)](https://results.pre-commit.ci/latest/github/Guts/mkdocs-related-content/master)
-[![📚 Documentation](https://github.com/Guts/mkdocs-related-content/actions/workflows/documentation.yml/badge.svg)](https://github.com/Guts/mkdocs-related-content/actions/workflows/documentation.yml)
-
-A plugin for [MkDocs](https://www.mkdocs.org), the static site generator, which creates [RSS 2.0](https://wikipedia.org/wiki/RSS) and [JSON Feed 1.1](https://www.jsonfeed.org/version/1.1/) feeds using the creation and modification dates from [git log](https://git-scm.com/docs/git-log) and page metadata ([YAML frontmatter](https://www.mkdocs.org/user-guide/writing-your-docs/#yaml-style-meta-data)).
+A plugin for [MkDocs](https://www.mkdocs.org) which computes, for every tagged page, a list of related pages based on shared tags - and exposes it to the Jinja context so your theme can render a "Related content" / "See also" section.
 
 ## Quickstart
 
 Installation:
 
-<!-- termynal: {"prompt_literal_start": [">"], title: Terminal} -->
-
 ```sh
-> pip install mkdocs-related-content
----> 100%
-RSS plugin for Mkdocs installed! Add 'rss' to your 'plugins' section in mkdocs.yml
+pip install mkdocs-related-content-plugin
 ```
 
 Then in your `mkdocs.yml`:
 
 ```yaml
-site_description: required. Used as feed mandatory channel description.
-site_name: required. Used as feed mandatory channel title and items source URL label.
-site_url: required. Used to build feed items URLs.
-
 plugins:
-  - rss
+  - related-content
+```
+
+The plugin exposes two Jinja variables to every page's template context:
+
+| Variable | Type | Description |
+| :------- | :--- | :----------- |
+| `related_pages` | `list[RelatedPage]` | The related pages for the current page, sorted by descending similarity score. Empty if the page has no tags, or no other page shares one. |
+| `related_content_section_title` | `str` | The configured section title (see [`section_title`](configuration.md#section_title)). |
+
+Each `RelatedPage` has: `title`, `url`, `shared_tags` (the list of tags in common with the current page) and `score` (the [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index), between 0 and 1).
+
+A minimal template override:
+
+```jinja title="overrides/partials/related.html"
+{% if related_pages %}
+<div class="related-pages">
+  <h2>{{ related_content_section_title }}</h2>
+  <ul>
+  {% for r in related_pages %}
+    <li><a href="{{ r.url }}">{{ r.title }}</a></li>
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}
+```
+
+Included from your theme's `main.html`:
+
+```jinja title="overrides/main.html"
+{% extends "base.html" %}
+{% block content %}
+  {{ super() }}
+  {% include "partials/related.html" %}
+{% endblock %}
 ```
 
 ----
 
-## Example
+## How the score is computed
 
-As examples, here are the feeds generated for this documentation:
+Two pages' relatedness is their [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index): the size of the intersection of their tags, divided by the size of the union.
 
-- [feed_rss_created.xml](feed_rss_created.xml) and [feed_json_created.json](feed_json_created.json) for  latest **created** pages: [W3C validator](https://validator.w3.org/feed/check.cgi?url=https%3A//guts.github.io/mkdocs-related-content/feed_rss_created.xml)
-- [feed_rss_updated.xml](feed_rss_updated.xml) and [feed_json_updated.json](feed_json_updated.json) for latest **updated** pages: [W3C validator](https://validator.w3.org/feed/check.cgi?url=https%3A//guts.github.io/mkdocs-related-content/feed_rss_updated.xml)
+```math
+score(A, B) = |tags(A) ∩ tags(B)| / |tags(A) ∪ tags(B)|
+```
 
-Or it could be displayed as a RSS or Feedly follow button:
-
-[![RSS logo](assets/rss_icon.svg "Subscribe to our RSS"){: width=130  loading=lazy }](https://guts.github.io/mkdocs-related-content/feed_rss_created.xml)
-[![Feedly button](https://s3.feedly.com/img/follows/feedly-follow-rectangle-flat-big_2x.png "Follow us on Feedly"){: width=130 loading=lazy }](https://feedly.com/i/subscription/feed%2Fhttps%3A%2F%2Fguts.github.io%2Fmkdocs-related-content%2Ffeed_rss_created.xml)
-{: align=middle }
-
-For JSON Feed, you can use the icon:
-
-[![JSON Feed icon](https://raw.githubusercontent.com/manton/JSONFeed/master/graphics/icon.png){: width=130 loading=lazy }](https://guts.github.io/mkdocs-related-content/feed_json_created.json)
-{: align=middle }
+A page with tags `[api, auth, python]` and a page with tags `[api, oauth]` share one tag (`api`) out of four distinct tags across both pages, for a score of `0.25`. Identical tag sets score `1.0`; pages with no tag in common score `0.0` and are never listed as related.
 
 !!! tip
-    See how to make your [RSS](integrations.md#reference-rss-feeds-in-html-meta-tags) and [JSON](integrations.md#reference-json-feeds-in-html-meta-tags) discoverable.
+    See [Configuration](configuration.md) to adjust the minimum score (`min_score`) and the maximum number of related pages shown (`max_related`).
 
 ----
 
+## Why this couldn't just read `tags.json`
+
+If your theme is [MaterialX](https://jaywhj.github.io/mkdocs-materialx/) or [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) with its built-in `tags` plugin enabled, you might expect this plugin to simply read the `tags.json` file that plugin can export. It can't, and the reason is a genuine constraint of MkDocs' build lifecycle, not an oversight:
+
+The `tags` plugin builds its page/tag mapping - and the `tags.json` export - incrementally, page by page, and only finishes once *every* page has been processed (at `on_post_build`). But a page's own Jinja context is built *before* that point, while pages are still being processed one by one. By the time `tags.json` (or the `tags` plugin's internal mapping) is complete, every page's HTML has already been rendered.
+
+This plugin works around that by reading every page's YAML frontmatter **directly from disk** during the `on_files` event - before MkDocs has rendered a single page. See [Integrations](integrations.md) for how it still stays consistent with the `tags` plugin's own configuration (e.g. `tags_allowed`) despite not being able to read its output.
+
 ## Credits
 
-![RSS logo](assets/rss_icon.svg "RSS icon - Wikimedia"){: align=right }
-
-- Plugin logic is inspired from [Tim Vink git-based plugins](https://github.com/timvink?tab=repositories&q=mkdocs-git&type=&language=) and main parts of Git stuff are nearly copied/pasted.
-- Using magic mainly from:
-  - [GitPython](https://gitpython.readthedocs.io/)
-  - [Jinja2](https://jinja.palletsprojects.com/)
-- Documentation colors are a tribute to the classic RSS color scheme: orange and white.
-- Logo generated with DALL·E.
+- Package layout, testing patterns and documentation structure are directly inspired by [Guts/mkdocs-rss-plugin](https://github.com/Guts/mkdocs-rss-plugin).
+- Feature scope inspired by [this MaterialX discussion](https://github.com/jaywhj/mkdocs-materialx/discussions/117) on automatic "Related content" sections.

@@ -6,20 +6,52 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Guts_mkdocs-related-content&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Guts_mkdocs-related-content)
 [![codecov](https://codecov.io/gh/Guts/mkdocs-related-content/branch/main/graph/badge.svg?token=A0XPLKiwiW)](https://codecov.io/gh/Guts/mkdocs-related-content)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![flake8](https://img.shields.io/badge/linter-flake8-green)](https://flake8.pycqa.org/)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Guts/mkdocs-related-content/master.svg)](https://results.pre-commit.ci/latest/github/Guts/mkdocs-related-content/master)
 [![📚 Documentation](https://github.com/Guts/mkdocs-related-content/actions/workflows/documentation.yml/badge.svg)](https://github.com/Guts/mkdocs-related-content/actions/workflows/documentation.yml)
 
-A plugin for [MkDocs](https://www.mkdocs.org), the static site generator, which creates [RSS 2.0](https://wikipedia.org/wiki/RSS) and [JSON Feed 1.1](https://www.jsonfeed.org/version/1.1/) feeds using the creation and modification dates from [git log](https://git-scm.com/docs/git-log) and page metadata ([YAML frontmatter](https://www.mkdocs.org/user-guide/writing-your-docs/#yaml-style-meta-data)).
+A plugin for [Properdocs](https://properdocs.org) / [MkDocs](https://www.mkdocs.org), the static site generator, which computes, for every tagged page, a list of related pages based on shared tags, and exposes it to the Jinja context so your theme can render a "Related content" / "See also" section.
 
 ## Installation
 
 ```sh
 pip install mkdocs-related-content
 ```
+
+## Usage
+
+Then in your `mkdocs.yml`:
+
+```yaml
+plugins:
+  - related-content
+```
+
+### Example
+
+Two pages sharing a tag:
+
+```yaml
+# docs/api-auth.md
+---
+tags:
+    - API
+    - authentication
+    - Python
+---
+```
+
+```yaml
+# docs/api-oauth.md
+---
+tags:
+    - API
+    - oAuth
+---
+```
+
+Both pages `api-auth.md` and `api-oauth.md` share the `api` tag: each will list the other as related content ([Jaccard similarity score](https://fr.wikipedia.org/wiki/Indice_et_distance_de_Jaccard) of `0.25`), regardless of the order pages are declared in `nav`.
 
 ## Development
 
