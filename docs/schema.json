@@ -27,7 +27,7 @@
               "description": "Purely informational - the plugin doesn't render any HTML itself, your template decides where and how to use it.",
               "markdownDescription": "configuration.md#plugin-options",
               "type": "string",
-              "default": "Contenus liés"
+              "default": "Related contents"
             },
             "max_related": {
               "title": "Maximum number of related pages kept per page.",

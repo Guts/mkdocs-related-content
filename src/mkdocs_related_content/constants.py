@@ -24,6 +24,6 @@ DEFAULT_TAGS_JSON_FILENAME: str = "related-tags.json"
 # `util.Util._guess_title` for how (and why) it's used.
 FIRST_HEADING_PATTERN: str = r"^#\s+(.+?)\s*$"
 
-# unused for now, kept for parity with plugins (like mkdocs-related-content) that
+# unused for now, kept for parity with plugins (like mkdocs-rss-plugin) that
 # cache heavier computations across builds
 DEFAULT_CACHE_FOLDER: Path = Path(".cache/plugins/related_content")

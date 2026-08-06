@@ -20,14 +20,14 @@ from pathlib import Path
 from mkdocs.config.base import Config
 
 # plugin target
-from mkdocs_related_content_plugin.config import RelatedContentPluginConfig
-from mkdocs_related_content_plugin.constants import (
+from src.mkdocs_related_content.config import RelatedContentPluginConfig
+from src.mkdocs_related_content.constants import (
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
     DEFAULT_TAGS_JSON_FILENAME,
 )
-from mkdocs_related_content_plugin.plugin import RelatedContentPlugin
+from src.mkdocs_related_content.plugin import RelatedContentPlugin
 
 # test suite
 from tests.base import BaseTest

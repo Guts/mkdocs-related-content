@@ -21,7 +21,7 @@ from mkdocs.config import load_config
 from mkdocs.config.base import Config
 
 # package
-from mkdocs_related_content_plugin.plugin import RelatedContentPlugin
+from src.mkdocs_related_content.plugin import RelatedContentPlugin
 
 # #############################################################################
 # ########## Classes ###############

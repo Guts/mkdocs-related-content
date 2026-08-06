@@ -43,7 +43,7 @@ class Util:
     """Standalone helpers for the Related Content plugin.
 
     Kept free of any Mkdocs event wiring so the scoring logic can be unit
-    tested on its own - same separation of concerns as mkdocs-related-content's
+    tested on its own - same separation of concerns as mkdocs-rss-plugin's
     own `Util` class.
     """
 

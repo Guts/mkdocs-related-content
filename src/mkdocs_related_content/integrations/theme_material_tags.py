@@ -4,7 +4,6 @@
 # ########## Libraries #############
 # ##################################
 
-# standard
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -113,10 +112,20 @@ class IntegrationMaterialTags(IntegrationMaterialThemeBase):
     def allowed_tags(self) -> set[str] | None:
         """Allow-list configured on Material's tags plugin (`tags_allowed`), if any.
 
+        `tags_allowed` isn't a plain list of strings: Material's `TagSet`
+        config option validates it into a `set` of its own `Tag` objects
+        (`material.plugins.tags.structure.tag.Tag`). That class overrides
+        `__eq__` to only compare against other `Tag` instances - comparing
+        one to a plain `str` raises `AssertionError` instead of returning
+        `False`. `Tag.__str__` does return the plain tag name, so we
+        normalize to strings here rather than leaking `Tag` objects into
+        `util.build_tags_index`, which compares against plain frontmatter
+        strings.
+
         Returns:
             None when no restriction is configured (every tag found in a
             page's frontmatter is considered valid), otherwise the set of
-            allowed tag names.
+            allowed tag names, as plain strings.
         """
         if self.tags_plugin_cfg is None:
             return None
@@ -124,7 +133,7 @@ class IntegrationMaterialTags(IntegrationMaterialThemeBase):
         allowed = getattr(self.tags_plugin_cfg.config, "tags_allowed", None)
         if not allowed:
             return None
-        return set(allowed)
+        return {str(tag) for tag in allowed}
 
     def exports_own_json(self) -> bool:
         """Best-effort check of whether Material's tags plugin will export its

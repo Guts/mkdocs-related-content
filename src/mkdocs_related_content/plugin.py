@@ -4,9 +4,9 @@
 # ########## Libraries #############
 # ##################################
 
-# standard library
 from __future__ import annotations
 
+# standard library
 from typing import TYPE_CHECKING, Literal
 
 # 3rd party

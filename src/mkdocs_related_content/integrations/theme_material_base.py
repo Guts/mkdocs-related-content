@@ -27,8 +27,8 @@ logger = get_plugin_logger(MKDOCS_LOGGER_NAME)
 class IntegrationMaterialThemeBase:
     """Shared base to detect whether the active theme is Material (or MaterialX).
 
-    Same pattern as mkdocs-related-content's own `IntegrationMaterialThemeBase`:
-    https://github.com/Guts/mkdocs-related-content
+    Same pattern as mkdocs-rss-plugin's own `IntegrationMaterialThemeBase`:
+    https://github.com/Guts/mkdocs-rss-plugin
     """
 
     IS_THEME_MATERIAL: bool = False
