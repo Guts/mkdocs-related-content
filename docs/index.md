@@ -65,9 +65,9 @@ Included from your theme's `main.html`:
 
 Two pages' relatedness is their [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index): the size of the intersection of their tags, divided by the size of the union.
 
-```math
+$$
 score(A, B) = |tags(A) ∩ tags(B)| / |tags(A) ∪ tags(B)|
-```
+$$
 
 A page with tags `[api, auth, python]` and a page with tags `[api, oauth]` share one tag (`api`) out of four distinct tags across both pages, for a score of `0.25`. Identical tag sets score `1.0`; pages with no tag in common score `0.0` and are never listed as related.
 
