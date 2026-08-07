@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/Guts/mkdocs-related-content/branch/main/graph/badge.svg?token=A0XPLKiwiW)](https://codecov.io/gh/Guts/mkdocs-related-content)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Guts/mkdocs-related-content/master.svg)](https://results.pre-commit.ci/latest/github/Guts/mkdocs-related-content/master)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Guts/mkdocs-related-content/main.svg)](https://results.pre-commit.ci/latest/github/Guts/mkdocs-related-content/main)
 [![📚 Documentation](https://github.com/Guts/mkdocs-related-content/actions/workflows/documentation.yml/badge.svg)](https://github.com/Guts/mkdocs-related-content/actions/workflows/documentation.yml)
 
 A plugin for [Properdocs](https://properdocs.org) / [MkDocs](https://www.mkdocs.org), the static site generator, which computes, for every tagged page, a list of related pages based on shared tags, and exposes it to the Jinja context so your theme can render a "Related content" / "See also" section.
