@@ -93,7 +93,7 @@ plugins:
             show_root_heading: true
             show_source: false
             merge_init_into_class: true
-
+  - related-content
   - privacy:
       enabled: !ENV [MKDOCS_ENABLE_PLUGIN_PRIVACY, true]
       cache_dir:
