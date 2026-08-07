@@ -29,6 +29,14 @@
               "type": "string",
               "default": "Related contents"
             },
+            "css_class": {
+              "title": "CSS class exposed to Jinja as `related_content_css_class`.",
+              "description": "Lets themes target a stable, known class without hardcoding it in the template, and lets integrators rename it to avoid clashing with an existing theme class.",
+              "markdownDescription": "configuration.md#plugin-options",
+              "type": "string",
+              "default": "related-pages",
+              "minLength": 1
+            },
             "max_related": {
               "title": "Maximum number of related pages kept per page.",
               "description": "Applied after sorting candidates by descending score.",

@@ -22,6 +22,7 @@ from mkdocs.config.base import Config
 # plugin target
 from mkdocs_related_content.config import RelatedContentPluginConfig
 from mkdocs_related_content.constants import (
+    DEFAULT_CSS_CLASS,
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
@@ -51,6 +52,7 @@ class TestConfig(BaseTest):
         expected = {
             "enabled": True,
             "section_title": DEFAULT_SECTION_TITLE,
+            "css_class": DEFAULT_CSS_CLASS,
             "max_related": DEFAULT_MAX_RELATED,
             "min_score": DEFAULT_MIN_SCORE,
             "use_material_tags": True,
@@ -71,6 +73,7 @@ class TestConfig(BaseTest):
         """Custom options passed in mkdocs.yml override the defaults."""
         custom_cfg = {
             "section_title": "Voir aussi",
+            "css_class": "voir-aussi",
             "max_related": 1,
             "min_score": 0.5,
             "tags_json_filename": "custom-tags.json",
@@ -80,6 +83,7 @@ class TestConfig(BaseTest):
         errors, warnings = plugin.load_config(custom_cfg)
 
         self.assertEqual(plugin.config.section_title, "Voir aussi")
+        self.assertEqual(plugin.config.css_class, "voir-aussi")
         self.assertEqual(plugin.config.max_related, 1)
         self.assertEqual(plugin.config.min_score, 0.5)
         self.assertEqual(plugin.config.tags_json_filename, "custom-tags.json")
