@@ -9,7 +9,7 @@ from mkdocs.config import config_options
 from mkdocs.config.base import Config
 
 # package
-from src.mkdocs_related_content.constants import (
+from mkdocs_related_content.constants import (
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,

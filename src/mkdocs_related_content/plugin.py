@@ -13,12 +13,12 @@ from typing import TYPE_CHECKING, Literal
 from mkdocs.plugins import BasePlugin, get_plugin_logger
 
 # package modules
-from src.mkdocs_related_content.config import RelatedContentPluginConfig
-from src.mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
-from src.mkdocs_related_content.integrations.theme_material_tags import (
+from mkdocs_related_content.config import RelatedContentPluginConfig
+from mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
+from mkdocs_related_content.integrations.theme_material_tags import (
     IntegrationMaterialTags,
 )
-from src.mkdocs_related_content.util import Util
+from mkdocs_related_content.util import Util
 
 if TYPE_CHECKING:
     from mkdocs.config.defaults import MkDocsConfig
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from mkdocs.structure.nav import Navigation
     from mkdocs.structure.pages import Page
 
-    from src.mkdocs_related_content.models import PageTagsEntry
+    from mkdocs_related_content.models import PageTagsEntry
 
 # ############################################################################
 # ########## Globals #############

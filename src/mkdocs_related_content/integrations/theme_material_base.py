@@ -11,7 +11,7 @@ from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.plugins import get_plugin_logger
 
 # package
-from src.mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
+from mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
 
 # ############################################################################
 # ########## Globals #############

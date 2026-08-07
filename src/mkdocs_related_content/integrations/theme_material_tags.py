@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING
 from mkdocs.plugins import get_plugin_logger
 
 # package
-from src.mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
-from src.mkdocs_related_content.integrations.theme_material_base import (
+from mkdocs_related_content.constants import MKDOCS_LOGGER_NAME
+from mkdocs_related_content.integrations.theme_material_base import (
     IntegrationMaterialThemeBase,
 )
 

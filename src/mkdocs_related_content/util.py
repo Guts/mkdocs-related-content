@@ -17,11 +17,11 @@ from mkdocs.plugins import get_plugin_logger
 from mkdocs.utils import meta as mkdocs_meta
 
 # package
-from src.mkdocs_related_content.constants import (
+from mkdocs_related_content.constants import (
     FIRST_HEADING_PATTERN,
     MKDOCS_LOGGER_NAME,
 )
-from src.mkdocs_related_content.models import PageTagsEntry, RelatedPage
+from mkdocs_related_content.models import PageTagsEntry, RelatedPage
 
 if TYPE_CHECKING:
     from mkdocs.structure.files import Files
