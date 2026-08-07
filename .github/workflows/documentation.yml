@@ -11,7 +11,7 @@ on:
       - "docs/**"
       - "*.md"
       - ".github/workflows/documentation.yml"
-      - src/mkdocs_related_content
+      - src/mkdocs_related_content/**/*.py
       - pyproject.toml
     tags:
       - "*"
