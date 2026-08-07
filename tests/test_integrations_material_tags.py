@@ -20,10 +20,10 @@ from pathlib import Path
 from mkdocs.config import load_config
 
 # package
-from src.mkdocs_related_content.integrations.theme_material_base import (
+from mkdocs_related_content.integrations.theme_material_base import (
     IntegrationMaterialThemeBase,
 )
-from src.mkdocs_related_content.integrations.theme_material_tags import (
+from mkdocs_related_content.integrations.theme_material_tags import (
     IntegrationMaterialTags,
 )
 

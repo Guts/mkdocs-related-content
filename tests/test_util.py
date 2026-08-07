@@ -23,8 +23,8 @@ from mkdocs.config import load_config
 from mkdocs.structure.files import get_files
 
 # plugin target
-from src.mkdocs_related_content.models import PageTagsEntry
-from src.mkdocs_related_content.util import Util
+from mkdocs_related_content.models import PageTagsEntry
+from mkdocs_related_content.util import Util
 
 # #############################################################################
 # ########## Classes ###############
