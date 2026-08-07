@@ -37,6 +37,7 @@ Full options, with their defaults:
 plugins:
   - related-content:
       enabled: true
+      css_class: related-pages
       export_tags_json: true
       max_related: 5
       min_score: 0.1
@@ -49,6 +50,7 @@ plugins:
 | :----- | :--- | :------ | :----------- |
 | `enabled` | `bool` | `true` | Set to `false` to disable the plugin without removing it from `mkdocs.yml` (e.g. via an environment-driven override). |
 | `section_title` | `str` | `"Related contents"` | Exposed to Jinja as `related_content_section_title`. Purely informational - the plugin doesn't render any HTML itself, your template decides where and how to use it. |
+| `css_class` | `str` | `"related-pages"` | Exposed to Jinja as `related_content_css_class`, for the same reason: a stable, known class name themes can target, that you can rename to avoid clashing with an existing theme class. |
 | `max_related` | `int` | `5` | Maximum number of related pages kept per page, after sorting by descending score. |
 | `min_score` | `float` | `0.1` | Minimum [Jaccard score](index.md#how-the-score-is-computed) (between `0` and `1`) for a page to be considered related. Raise it for stricter, higher-confidence matches only. |
 | `use_material_tags` | `bool` | `true` | Whether to align tag filtering with MaterialX/Material's `tags` plugin configuration (`tags_allowed`), when that theme and plugin are active. Set to `false` to ignore it entirely. See [Integrations](integrations.md). |
@@ -59,7 +61,7 @@ plugins:
 
 ## Jinja context
 
-Two variables are added to every page's template context.
+Three variables are added to every page's template context.
 
 See [the quickstart](index.md#quickstart) for a minimal template example.
 
@@ -67,5 +69,6 @@ See [the quickstart](index.md#quickstart) for a minimal template example.
 | :------- | :--- |
 | `related_pages` | `list[RelatedPage]`, possibly empty |
 | `related_content_section_title` | `str` |
+| `related_content_css_class` | `str` |
 
 Each `RelatedPage` exposes: `title` (`str`), `url` (`str`), `shared_tags` (`list[str]`), `score` (`float`, rounded to 3 decimals).

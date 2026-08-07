@@ -25,12 +25,13 @@ plugins:
   - related-content
 ```
 
-The plugin exposes two Jinja variables to every page's template context:
+The plugin exposes three Jinja variables to every page's template context:
 
 | Variable | Type | Description |
 | :------- | :--- | :----------- |
 | `related_pages` | `list[RelatedPage]` | The related pages for the current page, sorted by descending similarity score. Empty if the page has no tags, or no other page shares one. |
 | `related_content_section_title` | `str` | The configured section title (see [`section_title`](configuration.md#section_title)). |
+| `related_content_css_class` | `str` | A stable CSS class themes can target, or rename to avoid clashing with an existing one (see [`css_class`](configuration.md#css_class)). |
 
 Each `RelatedPage` has: `title`, `url`, `shared_tags` (the list of tags in common with the current page) and `score` (the [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index), between 0 and 1).
 
@@ -38,7 +39,7 @@ A minimal template override:
 
 ```jinja title="overrides/partials/related.html"
 {% if related_pages %}
-<div class="related-pages">
+<div class="{{ related_content_css_class }}">
   <h2>{{ related_content_section_title }}</h2>
   <ul>
   {% for r in related_pages %}

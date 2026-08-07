@@ -28,18 +28,17 @@ from tests.base import BaseTest
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-_RELATED_SECTION_RE = re.compile(r'<div class="related-pages">.*?</div>', re.DOTALL)
 
+def _extract_related_section(html: str, css_class: str = "related-pages") -> str:
+    """Isolate the plugin's own block from a full rendered page.
 
-def _extract_related_section(html: str) -> str:
-    """Isolate the `related-pages` block from a full rendered page.
-
-    The default `mkdocs` theme's navbar links to every page in the site
-    regardless of relatedness, so asserting against the whole HTML body
-    would pass or fail for the wrong reason. Only what's inside our own
-    `related-pages` block reflects what the plugin actually computed.
+    The default `mkdocs` theme's navbar (and other page chrome) also uses
+    `<div class="...">` elements, so a class-agnostic regex would grab the
+    wrong one - this only matches the block using the given `css_class`
+    (the plugin's `related_content_css_class`, `related-pages` by default).
     """
-    match = _RELATED_SECTION_RE.search(html)
+    pattern = re.compile(rf'<div class="{re.escape(css_class)}">.*?</div>', re.DOTALL)
+    match = pattern.search(html)
     return match.group(0) if match else ""
 
 
@@ -125,7 +124,9 @@ class TestBuildRelatedContent(BaseTest):
             page_a_html = (site_dir / "page-a" / "index.html").read_text(
                 encoding="utf-8"
             )
-            related_section = _extract_related_section(page_a_html)
+            related_section = _extract_related_section(
+                page_a_html, css_class="voir-aussi"
+            )
             self.assertIn("Voir aussi", related_section)  # custom section_title
             self.assertIn("page-d/", related_section)
             self.assertNotIn("page-b/", related_section)  # excluded by min_score

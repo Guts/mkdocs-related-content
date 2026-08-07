@@ -176,7 +176,8 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
     ) -> dict:
         """Called after the page context is created, before rendering.
 
-        Exposes `related_pages` and the configured section title to Jinja.
+        Exposes `related_pages`, the configured section title and CSS class
+        to Jinja.
 
         See: https://www.mkdocs.org/user-guide/plugins/#on_page_context
 
@@ -205,6 +206,7 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
             files=self.files,
         )
         context["related_content_section_title"] = self.config.section_title
+        context["related_content_css_class"] = self.config.css_class
 
         return context
 

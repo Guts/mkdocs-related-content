@@ -10,6 +10,7 @@ from mkdocs.config.base import Config
 
 # package
 from mkdocs_related_content.constants import (
+    DEFAULT_CSS_CLASS,
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
@@ -28,6 +29,7 @@ class RelatedContentPluginConfig(Config):
 
     # display
     section_title = config_options.Type(str, default=DEFAULT_SECTION_TITLE)
+    css_class = config_options.Type(str, default=DEFAULT_CSS_CLASS)
 
     # scoring
     max_related = config_options.Type(int, default=DEFAULT_MAX_RELATED)
