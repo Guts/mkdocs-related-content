@@ -14,10 +14,13 @@ authors = [{ name = "Julien Moura", email = "dev@ingeoveritas.com" }]
 maintainers = [{ name = "Julien Moura", email = "dev@ingeoveritas.com" }]
 keywords = [
     "documentation",
+    "Jaccard",
     "mkdocs",
-    "properdocs",
     "plugin",
+    "properdocs",
     "related",
+    "see also",
+    "similarity",
     "tags",
 ]
 classifiers = [
@@ -34,12 +37,6 @@ classifiers = [
     "Topic :: Documentation",
     "Topic :: Software Development :: Documentation",
     "Topic :: Text Processing :: Markup :: Markdown",
-]
-
-dependencies = [
-
-
-
 ]
 
 [project.optional-dependencies]
