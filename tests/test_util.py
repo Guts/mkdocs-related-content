@@ -108,7 +108,7 @@ class TestUtilScoring(unittest.TestCase):
         index = {
             "a.md": PageTagsEntry(src_uri="a.md", url="a/", tags=["api"]),
             "b.md": PageTagsEntry(
-                src_uri="b.md", url="b/", tags=["api"], fallback_title="Titre B"
+                src_uri="b.md", url="b/", tags=["api"], fallback_title="Title B"
             ),
         }
 
@@ -127,7 +127,7 @@ class TestUtilScoring(unittest.TestCase):
         )
 
         self.assertEqual(len(resolved), 1)
-        self.assertEqual(resolved[0].title, "Titre B")
+        self.assertEqual(resolved[0].title, "Title B")
         # relative to current_page_url ("a/"), not root-relative ("b/")
         self.assertEqual(resolved[0].url, "../b/")
         self.assertEqual(resolved[0].shared_tags, ["api"])
@@ -136,7 +136,7 @@ class TestUtilScoring(unittest.TestCase):
     def test_resolve_related_pages_prefers_real_page_title(self):
         index = {
             "b.md": PageTagsEntry(
-                src_uri="b.md", url="b/", tags=["api"], fallback_title="Titre de repli"
+                src_uri="b.md", url="b/", tags=["api"], fallback_title="Fallback title"
             ),
         }
 
