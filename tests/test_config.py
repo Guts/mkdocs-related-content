@@ -72,8 +72,8 @@ class TestConfig(BaseTest):
     def test_plugin_config_custom_options(self):
         """Custom options passed in mkdocs.yml override the defaults."""
         custom_cfg = {
-            "section_title": "Voir aussi",
-            "css_class": "voir-aussi",
+            "section_title": "See also",
+            "css_class": "see-also",
             "max_related": 1,
             "min_score": 0.5,
             "tags_json_filename": "custom-tags.json",
@@ -82,8 +82,8 @@ class TestConfig(BaseTest):
         plugin = RelatedContentPlugin()
         errors, warnings = plugin.load_config(custom_cfg)
 
-        self.assertEqual(plugin.config.section_title, "Voir aussi")
-        self.assertEqual(plugin.config.css_class, "voir-aussi")
+        self.assertEqual(plugin.config.section_title, "See also")
+        self.assertEqual(plugin.config.css_class, "see-also")
         self.assertEqual(plugin.config.max_related, 1)
         self.assertEqual(plugin.config.min_score, 0.5)
         self.assertEqual(plugin.config.tags_json_filename, "custom-tags.json")

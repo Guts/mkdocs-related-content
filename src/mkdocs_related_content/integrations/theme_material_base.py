@@ -68,7 +68,6 @@ class IntegrationMaterialThemeBase:
             return self.IS_THEME_MATERIAL
 
         logger.warning(
-            "Impossible de vérifier le thème : la configuration Mkdocs "
-            "n'est pas disponible."
+            "Unable to check the theme: Mkdocs configuration " "is not available."
         )
         return False

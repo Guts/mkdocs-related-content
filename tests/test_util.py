@@ -139,7 +139,7 @@ class TestUtilScoring(unittest.TestCase):
         }
 
         class _FakePage:
-            title = "Titre Mkdocs résolu"
+            title = "Resolved Mkdocs Title"
 
         class _FakeFile:
             page = _FakePage()
@@ -155,7 +155,7 @@ class TestUtilScoring(unittest.TestCase):
             files=_FakeFiles(),
         )
 
-        self.assertEqual(resolved[0].title, "Titre Mkdocs résolu")
+        self.assertEqual(resolved[0].title, "Resolved Mkdocs Title")
 
 
 class TestUtilTagsIndex(unittest.TestCase):

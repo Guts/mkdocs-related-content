@@ -3,8 +3,8 @@ site_url: https://example.org/
 
 plugins:
   - related-content:
-      section_title: "Voir aussi"
-      css_class: "voir-aussi"
+      section_title: "See also"
+      css_class: "see-also"
       max_related: 1
       min_score: 0.5
       tags_json_filename: custom-tags.json

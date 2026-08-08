@@ -77,7 +77,7 @@ class Util:
             try:
                 source = Path(file.abs_src_path).read_text(encoding="utf-8-sig")
             except OSError as err:
-                logger.debug(f"Impossible de lire {file.abs_src_path} : {err}")
+                logger.debug(f"Unable to read {file.abs_src_path}: {err}")
                 continue
 
             _, page_meta = mkdocs_meta.get_data(source)
@@ -98,7 +98,7 @@ class Util:
                 ),
             )
 
-        logger.debug(f"{len(index)} page(s) indexée(s) avec des tags.")
+        logger.debug(f"{len(index)} page(s) indexed with tags.")
         return index
 
     @staticmethod
@@ -260,4 +260,4 @@ class Util:
             json.dumps({"mappings": mappings}, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        logger.debug(f"Export JSON des tags écrit dans {out_path}")
+        logger.debug(f"Tags JSON export written to {out_path}")

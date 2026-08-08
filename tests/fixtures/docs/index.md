@@ -1,8 +1,8 @@
 ---
-title: Accueil
+title: Home
 tags:
   - demo
 ---
-# Accueil
+# Home
 
-Page sans rapport avec les autres, tag isolé.
+Unrelated to the other pages, isolated tag.

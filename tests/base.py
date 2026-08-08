@@ -49,8 +49,8 @@ class BaseTest(unittest.TestCase):
         ]
         if not len(plugin_instances):
             logging.warning(
-                "Le plugin related-content n'est pas activé dans le fichier "
-                f"MkDocs : {mkdocs_yml_filepath}"
+                "The related-content plugin is not enabled in the MkDocs "
+                f"config file: {mkdocs_yml_filepath}"
             )
             return cfg_mkdocs
 

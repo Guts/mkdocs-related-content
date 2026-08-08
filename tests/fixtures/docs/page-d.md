@@ -1,11 +1,11 @@
 ---
-title: API Auth (bis)
+title: API Auth (duplicate)
 tags:
   - api
   - auth
   - python
 ---
-# API Auth (bis)
+# API Auth (duplicate)
 
-Mêmes tags que `page-a.md` (score de similarité = 1.0), pour tester le tri
-par score et le plafond `max_related`.
+Same tags as `page-a.md` (similarity score = 1.0), used to test sorting
+by score and the `max_related` cap.

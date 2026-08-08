@@ -7,4 +7,4 @@ tags:
 ---
 # API Auth
 
-Documentation de l'authentification API.
+Documentation for API authentication.

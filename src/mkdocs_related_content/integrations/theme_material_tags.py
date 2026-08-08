@@ -74,8 +74,8 @@ class IntegrationMaterialTags(IntegrationMaterialThemeBase):
         if switch_force is False:
             self.IS_ENABLED = False
             logger.debug(
-                "Intégration avec le plugin 'tags' de Material désactivée "
-                "explicitement dans la configuration du plugin."
+                "Integration with Material's 'tags' plugin explicitly "
+                "disabled in the plugin's configuration."
             )
 
     def _detect_tags_plugin(self, mkdocs_config: MkDocsConfig) -> bool:
@@ -89,23 +89,23 @@ class IntegrationMaterialTags(IntegrationMaterialThemeBase):
         """
         if not self.is_mkdocs_theme_material(mkdocs_config=mkdocs_config):
             logger.debug(
-                "Le thème installé n'est pas 'material'. Intégration 'tags' désactivée."
+                "Installed theme is not 'material'. 'tags' integration disabled."
             )
             return False
 
         tags_cfg = mkdocs_config.plugins.get(f"{self.THEME_NAME}/tags")
         if tags_cfg is None:
             logger.debug(
-                "Le plugin 'tags' de Material n'est pas déclaré dans la configuration."
+                "Material's 'tags' plugin is not declared in the configuration."
             )
             return False
 
         if not getattr(tags_cfg.config, "enabled", True):
-            logger.debug("Le plugin 'tags' de Material est déclaré mais désactivé.")
+            logger.debug("Material's 'tags' plugin is declared but disabled.")
             return False
 
         self.tags_plugin_cfg = tags_cfg
-        logger.debug("Plugin 'tags' de Material détecté et activé.")
+        logger.debug("Material's 'tags' plugin detected and enabled.")
         return True
 
     @property

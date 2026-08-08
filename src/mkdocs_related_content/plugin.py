@@ -104,8 +104,8 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
 
         if self.integration_material_tags.IS_ENABLED:
             logger.debug(
-                "Thème Material + plugin 'tags' détectés : filtrage des "
-                "tags aligné sur la configuration de ce plugin."
+                "Material/MaterialX theme and 'tags' plugin detected: "
+                "aligning tag filtering with its configuration."
             )
 
         return config
@@ -230,8 +230,8 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
             and self.integration_material_tags.exports_own_json()
         ):
             logger.debug(
-                "Le plugin 'tags' de Material exporte déjà son propre "
-                "tags.json : export interne ignoré pour éviter un doublon."
+                "Material's own 'tags' plugin already exports its own "
+                "tags.json: skipping our own export to avoid a duplicate."
             )
             return
 

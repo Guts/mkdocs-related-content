@@ -1,9 +1,9 @@
 ---
-title: Jardinage
+title: Gardening
 tags:
   - gardening
 ---
-# Jardinage
+# Gardening
 
-Aucun tag en commun avec les autres pages : ne doit jamais apparaître
-comme contenu lié.
+No tag in common with the other pages: must never appear as related
+content.

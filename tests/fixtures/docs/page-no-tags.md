@@ -1,7 +1,7 @@
 ---
-title: Sans tags
+title: No tags
 ---
-# Sans tags
+# No tags
 
-Aucun tag : ne doit jamais apparaître dans l'index ni dans une liste de
-Related contents.
+No tag at all: must never appear in the index nor in any Related
+contents list.

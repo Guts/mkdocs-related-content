@@ -125,9 +125,9 @@ class TestBuildRelatedContent(BaseTest):
                 encoding="utf-8"
             )
             related_section = _extract_related_section(
-                page_a_html, css_class="voir-aussi"
+                page_a_html, css_class="see-also"
             )
-            self.assertIn("Voir aussi", related_section)  # custom section_title
+            self.assertIn("See also", related_section)  # custom section_title
             self.assertIn("page-d/", related_section)
             self.assertNotIn("page-b/", related_section)  # excluded by min_score
 
