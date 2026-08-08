@@ -103,6 +103,40 @@ class TestBuildRelatedContent(BaseTest):
             self.assertIn("page-b/", related_section)
             self.assertNotIn("page-c/", related_section)
 
+    def test_related_page_url_is_correctly_relative_for_nested_pages(self):
+        """`sub/page-nested.md` is one level deep and shares the `api` tag
+        with `page-a.md`. `RelatedPage.url` is computed relative to each
+        page individually (`Util.resolve_related_pages`), so the href must
+        account for each page's depth - `../sub/page-nested/` from the
+        root, `../../page-a/` from one level down - not a same-directory-
+        looking `sub/page-nested/` or `page-a/` that would silently break
+        navigation once a page isn't at the site root.
+        """
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            testproject_path = self.setup_clean_mkdocs_folder(
+                mkdocs_yml_filepath=Path("tests/fixtures/mkdocs_minimal.yml"),
+                output_path=Path(tmpdirname),
+            )
+            site_dir = Path(tmpdirname) / "site"
+            cli_result = self.build_docs_setup(
+                mkdocs_yml_filepath=testproject_path / "mkdocs.yml",
+                output_path=site_dir,
+                strict=True,
+            )
+            self._assert_build_succeeded(cli_result)
+
+            page_a_html = (site_dir / "page-a" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            page_a_related = _extract_related_section(page_a_html)
+            self.assertIn('href="../sub/page-nested/"', page_a_related)
+
+            nested_html = (site_dir / "sub" / "page-nested" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            nested_related = _extract_related_section(nested_html)
+            self.assertIn('href="../../page-a/"', nested_related)
+
     def test_max_related_and_min_score_are_applied(self):
         """`mkdocs_custom_options.yml` sets `max_related: 1` and a strict
         `min_score: 0.5`: `page-a` should end up related only to `page-d`

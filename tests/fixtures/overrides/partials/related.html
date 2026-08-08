@@ -3,7 +3,7 @@
   <h2>{{ related_content_section_title }}</h2>
   <ul>
   {% for r in related_pages %}
-    <li><a href="{{ r.url | url }}">{{ r.title }}</a> (score={{ r.score }}, tags={{ r.shared_tags }})</li>
+    <li><a href="{{ r.url }}">{{ r.title }}</a> (score={{ r.score }}, tags={{ r.shared_tags }})</li>
   {% endfor %}
   </ul>
 </div>

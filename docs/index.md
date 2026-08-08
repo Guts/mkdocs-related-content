@@ -33,7 +33,7 @@ The plugin exposes three Jinja variables to every page's template context:
 | `related_content_section_title` | `str` | The configured section title (see [`section_title`](configuration.md#section_title)). |
 | `related_content_css_class` | `str` | A stable CSS class themes can target, or rename to avoid clashing with an existing one (see [`css_class`](configuration.md#css_class)). |
 
-Each `RelatedPage` has: `title`, `url`, `shared_tags` (the list of tags in common with the current page) and `score` (the [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index), between 0 and 1).
+Each `RelatedPage` has: `title`, `url` (already relative to the page being rendered - ready to use as-is in an `href`, no need for Mkdocs' `| url` filter), `shared_tags` (the list of tags in common with the current page) and `score` (the [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index), between 0 and 1).
 
 A minimal template override:
 

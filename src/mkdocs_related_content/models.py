@@ -42,5 +42,8 @@ class RelatedPage:
 
     title: str
     url: str
+    """Relative to the page it's attached to (see `Util.resolve_related_pages`),
+    ready to use as-is in an `href` - unlike `PageTagsEntry.url`, which is
+    root-relative."""
     shared_tags: list[str] = field(default_factory=list)
     score: float = 0.0

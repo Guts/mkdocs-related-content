@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 # 3rd party
 from mkdocs.plugins import get_plugin_logger
+from mkdocs.utils import get_relative_url
 from mkdocs.utils import meta as mkdocs_meta
 
 # package
@@ -179,6 +180,7 @@ class Util:
         tags_index: dict[str, PageTagsEntry],
         current_tags: set[str],
         files: Files,
+        current_page_url: str,
     ) -> list[RelatedPage]:
         """Turn `(score, src_uri)` pairs into template-ready `RelatedPage` objects.
 
@@ -188,6 +190,15 @@ class Util:
         `tags_index` otherwise. In practice the two are almost always
         identical.
 
+        `RelatedPage.url` is computed relative to `current_page_url` (via
+        Mkdocs' own `get_relative_url`) rather than left root-relative like
+        `tags_index[...].url` is. Root-relative URLs (e.g. `sub/page-b/`)
+        only resolve correctly from the site root - used directly as
+        `href="{{ r.url }}"` in a template, they produce a wrong link for
+        any page that isn't at the site root itself. Resolving them here
+        means every consumer gets a correct, ready-to-use `href` without
+        having to remember to apply Mkdocs' `| url` Jinja filter themselves.
+
         Args:
             related: `(score, src_uri)` pairs, typically from
                 `compute_related_pages`.
@@ -195,6 +206,9 @@ class Util:
             current_tags: tags of the page these related pages are for.
             files: Mkdocs' global Files collection, used to reach the real
                 `Page` object when it's already available.
+            current_page_url: root-relative URL of the page these related
+                pages are for (`page.url`), used to make each `RelatedPage.url`
+                relative to it.
 
         Returns:
             Ready-to-render related pages, in the same order as `related`.
@@ -212,7 +226,7 @@ class Util:
             resolved.append(
                 RelatedPage(
                     title=title or src_uri,
-                    url=entry.url,
+                    url=get_relative_url(entry.url, current_page_url),
                     shared_tags=sorted(current_tags & set(entry.tags)),
                     score=round(score, 3),
                 )
