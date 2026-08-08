@@ -123,11 +123,13 @@ class TestUtilScoring(unittest.TestCase):
             tags_index=index,
             current_tags={"api"},
             files=_FakeFiles(),
+            current_page_url="a/",
         )
 
         self.assertEqual(len(resolved), 1)
         self.assertEqual(resolved[0].title, "Titre B")
-        self.assertEqual(resolved[0].url, "b/")
+        # relative to current_page_url ("a/"), not root-relative ("b/")
+        self.assertEqual(resolved[0].url, "../b/")
         self.assertEqual(resolved[0].shared_tags, ["api"])
         self.assertEqual(resolved[0].score, 1.0)
 
@@ -153,6 +155,7 @@ class TestUtilScoring(unittest.TestCase):
             tags_index=index,
             current_tags={"api"},
             files=_FakeFiles(),
+            current_page_url="a/",
         )
 
         self.assertEqual(resolved[0].title, "Resolved Mkdocs Title")

@@ -204,6 +204,7 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
             tags_index=self.tags_index,
             current_tags=set(entry.tags),
             files=self.files,
+            current_page_url=page.url,
         )
         context["related_content_section_title"] = self.config.section_title
         context["related_content_css_class"] = self.config.css_class
