@@ -163,10 +163,15 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
         if not self.config.enabled or not self.tags_index:
             return nav
 
+        tag_weights = None
+        if self.config.weight_by_tag_rarity:
+            tag_weights = self.util.compute_tag_weights(self.tags_index)
+
         self.related_pages_by_uri = self.util.compute_related_pages(
             tags_index=self.tags_index,
             min_score=self.config.min_score,
             max_related=self.config.max_related,
+            tag_weights=tag_weights,
         )
 
         return nav

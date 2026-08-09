@@ -119,12 +119,48 @@ class Util:
         return Path(src_uri).stem.replace("-", " ").replace("_", " ").title()
 
     @staticmethod
-    def jaccard_score(tags_a: set[str], tags_b: set[str]) -> float:
+    def compute_tag_weights(tags_index: dict[str, PageTagsEntry]) -> dict[str, float]:
+        """Weight each tag by the inverse of how many pages use it.
+
+        A tag shared by only 2 pages out of 500 is a much stronger signal
+        of relatedness than a tag half the site uses - this gives the
+        former a weight of `0.5` and the latter `1/250 = 0.004`, so it
+        counts for much less in `jaccard_score`.
+
+        Args:
+            tags_index: output of `build_tags_index`.
+
+        Returns:
+            {tag: weight}, weight = 1 / number of pages using that tag.
+        """
+        frequency: dict[str, int] = {}
+        for entry in tags_index.values():
+            for tag in entry.tags:
+                frequency[tag] = frequency.get(tag, 0) + 1
+        return {tag: 1 / count for tag, count in frequency.items()}
+
+    @staticmethod
+    def jaccard_score(
+        tags_a: set[str],
+        tags_b: set[str],
+        tag_weights: dict[str, float] | None = None,
+    ) -> float:
         """Similarity between two tag sets: |intersection| / |union|.
+
+        When `tag_weights` is given (see `compute_tag_weights`), each tag
+        contributes its weight instead of a flat `1` to both the
+        intersection and union sums - rare, shared tags count for more
+        than common ones. The result stays between 0 and 1 either way,
+        since the intersection is always a subset of the union.
 
         Args:
             tags_a: tags of the first page.
             tags_b: tags of the second page.
+            tag_weights: optional per-tag weight, e.g. from
+                `compute_tag_weights`. A tag missing from this mapping
+                falls back to a weight of `1`. `None` (the default) is
+                equivalent to every tag weighing `1` - the plain,
+                unweighted Jaccard score.
 
         Returns:
             A score between 0 (no shared tag) and 1 (identical tag sets).
@@ -132,13 +168,20 @@ class Util:
         union = tags_a | tags_b
         if not union:
             return 0.0
-        return len(tags_a & tags_b) / len(union)
+
+        if tag_weights is None:
+            return len(tags_a & tags_b) / len(union)
+
+        intersection_weight = sum(tag_weights.get(t, 1) for t in tags_a & tags_b)
+        union_weight = sum(tag_weights.get(t, 1) for t in union)
+        return intersection_weight / union_weight if union_weight else 0.0
 
     def compute_related_pages(
         self,
         tags_index: dict[str, PageTagsEntry],
         min_score: float,
         max_related: int,
+        tag_weights: dict[str, float] | None = None,
     ) -> dict[str, list[tuple[float, str]]]:
         """Precompute every page's related pages in a single pass.
 
@@ -149,6 +192,9 @@ class Util:
             tags_index: output of `build_tags_index`.
             min_score: minimum score for a page to be considered related.
             max_related: maximum number of related pages kept per page.
+            tag_weights: optional per-tag weight passed to `jaccard_score`
+                (see `compute_tag_weights`). `None` (the default) scores
+                every tag equally.
 
         Returns:
             {src_uri: [(score, related_src_uri), ...]}, sorted by descending
@@ -162,7 +208,9 @@ class Util:
         for i, (src_uri_a, entry_a) in enumerate(entries):
             tags_a = set(entry_a.tags)
             for src_uri_b, entry_b in entries[i + 1 :]:
-                score = self.jaccard_score(tags_a, set(entry_b.tags))
+                score = self.jaccard_score(
+                    tags_a, set(entry_b.tags), tag_weights=tag_weights
+                )
                 if score < min_score:
                     continue
                 related[src_uri_a].append((score, src_uri_b))

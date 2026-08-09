@@ -15,6 +15,7 @@ from mkdocs_related_content.constants import (
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
     DEFAULT_TAGS_JSON_FILENAME,
+    DEFAULT_WEIGHT_BY_TAG_RARITY,
 )
 
 # ############################################################################
@@ -34,6 +35,9 @@ class RelatedContentPluginConfig(Config):
     # scoring
     max_related = config_options.Type(int, default=DEFAULT_MAX_RELATED)
     min_score = config_options.Type(float, default=DEFAULT_MIN_SCORE)
+    weight_by_tag_rarity = config_options.Type(
+        bool, default=DEFAULT_WEIGHT_BY_TAG_RARITY
+    )
 
     # Material integration - see integrations/theme_material_tags.py
     use_material_tags = config_options.Type(bool, default=True)

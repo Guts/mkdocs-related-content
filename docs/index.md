@@ -77,6 +77,20 @@ A page with tags `[api, auth, python]` and a page with tags `[api, oauth]` share
 
 ----
 
+## Weighting by tag rarity
+
+By default, every tag counts equally: two pages sharing a tag half the site uses (say `guide`) are treated exactly like two pages sharing one only they use (say `oauth-pkce`) - as long as the set sizes are the same, the score is the same.
+
+Setting [`weight_by_tag_rarity: true`](configuration.md#plugin-options) changes that: each tag is weighted by the inverse of how many pages on the site use it (`1 / page_count`), and that weight - instead of a flat `1` - is what gets summed on both sides of the Jaccard ratio.
+
+$$
+score(A, B) = \frac{\sum_{t \, \in \, tags(A) \, \cap \, tags(B)} weight(t)}{\sum_{t \, \in \, tags(A) \, \cup \, tags(B)} weight(t)}
+$$
+
+Concretely: a tag used by only 2 pages gets a weight of `0.5`; a tag used by 250 pages gets `0.004`. Two pages sharing the rare tag end up scored far higher than two pages sharing the common one, even if the rest of their tags are otherwise identical in number. The score still stays between `0` and `1` either way - with every tag weighted `1` (the default), this is exactly the plain Jaccard score above.
+
+----
+
 ## Why this couldn't just read `tags.json`
 
 If your theme is [MaterialX](https://jaywhj.github.io/mkdocs-materialx/) or [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) with its built-in `tags` plugin enabled, you might expect this plugin to simply read the `tags.json` file that plugin can export. It can't, and the reason is a genuine constraint of MkDocs' build lifecycle, not an oversight:

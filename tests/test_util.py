@@ -57,6 +57,81 @@ class TestUtilScoring(unittest.TestCase):
         score = self.plg_utils.jaccard_score(set(), set())
         self.assertEqual(score, 0.0)
 
+    def test_jaccard_score_weights_none_matches_unweighted(self):
+        """`tag_weights=None` (the default) is the plain, unweighted score."""
+        score = self.plg_utils.jaccard_score({"a", "b"}, {"a", "c"}, tag_weights=None)
+        self.assertAlmostEqual(score, 1 / 3)
+
+    def test_jaccard_score_weighted_favors_rarer_shared_tag(self):
+        """A shared tag with a lower weight (rarer) counts for more."""
+        weights = {"common": 0.1, "rare": 0.5}
+
+        # sharing only the frequent tag
+        score_common = self.plg_utils.jaccard_score(
+            {"common", "x1"}, {"common", "x2"}, tag_weights=weights
+        )
+        # sharing only the rare tag
+        score_rare = self.plg_utils.jaccard_score(
+            {"rare", "x1"}, {"rare", "x2"}, tag_weights=weights
+        )
+        # same set shape either way (2 tags, 1 shared) - unweighted these tie
+        unweighted = self.plg_utils.jaccard_score({"common", "x1"}, {"common", "x2"})
+        self.assertAlmostEqual(unweighted, 1 / 3)
+
+        self.assertGreater(score_rare, score_common)
+
+    def test_compute_tag_weights_is_inverse_frequency(self):
+        index = {
+            "a.md": PageTagsEntry(src_uri="a.md", url="a/", tags=["common", "rare"]),
+            "b.md": PageTagsEntry(src_uri="b.md", url="b/", tags=["common"]),
+            "c.md": PageTagsEntry(src_uri="c.md", url="c/", tags=["common"]),
+            "d.md": PageTagsEntry(src_uri="d.md", url="d/", tags=["common"]),
+        }
+        weights = self.plg_utils.compute_tag_weights(index)
+
+        # "common" is used by 4 pages -> weight 1/4 ; "rare" by 1 -> weight 1
+        self.assertEqual(weights["common"], 0.25)
+        self.assertEqual(weights["rare"], 1.0)
+
+    def test_compute_related_pages_with_weights_changes_ranking(self):
+        """Unweighted, `page-b` and `page-c` tie with `page-a` (same set
+        shape). Weighted by rarity, `page-c` (shares the rarer tag) ranks
+        strictly above `page-b` (shares the more common one).
+        """
+        index = {
+            "page-a.md": PageTagsEntry(
+                src_uri="page-a.md", url="a/", tags=["common", "rare"]
+            ),
+            "page-b.md": PageTagsEntry(
+                src_uri="page-b.md", url="b/", tags=["common", "x1"]
+            ),
+            "page-c.md": PageTagsEntry(
+                src_uri="page-c.md", url="c/", tags=["rare", "x2"]
+            ),
+            # filler pages, just to make "common" more frequent than "rare"
+            "filler-1.md": PageTagsEntry(
+                src_uri="filler-1.md", url="f1/", tags=["common"]
+            ),
+            "filler-2.md": PageTagsEntry(
+                src_uri="filler-2.md", url="f2/", tags=["common"]
+            ),
+        }
+
+        unweighted = self.plg_utils.compute_related_pages(
+            tags_index=index, min_score=0.0, max_related=5
+        )
+        scores_unweighted = {src: score for score, src in unweighted["page-a.md"]}
+        self.assertAlmostEqual(
+            scores_unweighted["page-b.md"], scores_unweighted["page-c.md"]
+        )
+
+        weights = self.plg_utils.compute_tag_weights(index)
+        weighted = self.plg_utils.compute_related_pages(
+            tags_index=index, min_score=0.0, max_related=5, tag_weights=weights
+        )
+        scores_weighted = {src: score for score, src in weighted["page-a.md"]}
+        self.assertGreater(scores_weighted["page-c.md"], scores_weighted["page-b.md"])
+
     def test_compute_related_pages_symmetry_and_threshold(self):
         index = {
             "a.md": PageTagsEntry(

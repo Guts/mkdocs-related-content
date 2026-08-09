@@ -54,6 +54,13 @@
               "minimum": 0,
               "maximum": 1
             },
+            "weight_by_tag_rarity": {
+              "title": "Weight shared tags by how rarely they're used on the site.",
+              "description": "When true, a shared tag counts for more the fewer pages use it (1 / page_count), instead of every tag counting equally.",
+              "markdownDescription": "index.md#weighting-by-tag-rarity",
+              "type": "boolean",
+              "default": false
+            },
             "use_material_tags": {
               "title": "Enable/Disable alignment with MaterialX/Material's tags plugin configuration.",
               "description": "When the active theme is materialx or material and its tags plugin is enabled, aligns tag filtering with its tags_allowed setting.",
