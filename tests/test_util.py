@@ -151,6 +151,28 @@ class TestUtilScoring(unittest.TestCase):
         # c shares nothing with anyone
         self.assertEqual(related["c.md"], [])
 
+    def test_compute_related_pages_scores_multi_tag_overlap_once(self):
+        """`a.md` and `b.md` share every one of their tags. The inverted
+        index groups candidate pairs by tag, so this pair is a candidate
+        under 3 different tags - it must still be scored (and appear in
+        the result) exactly once, not 3 times.
+        """
+        index = {
+            "a.md": PageTagsEntry(
+                src_uri="a.md", url="a/", tags=["api", "auth", "python"]
+            ),
+            "b.md": PageTagsEntry(
+                src_uri="b.md", url="b/", tags=["api", "auth", "python"]
+            ),
+        }
+
+        related = self.plg_utils.compute_related_pages(
+            tags_index=index, min_score=0.1, max_related=5
+        )
+
+        self.assertEqual(related["a.md"], [(1.0, "b.md")])
+        self.assertEqual(related["b.md"], [(1.0, "a.md")])
+
     def test_compute_related_pages_respects_max_related(self):
         index = {
             "a.md": PageTagsEntry(src_uri="a.md", url="a/", tags=["api"]),
