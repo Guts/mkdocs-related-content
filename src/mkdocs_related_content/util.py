@@ -147,6 +147,12 @@ class Util:
     ) -> float:
         """Similarity between two tag sets: |intersection| / |union|.
 
+        Computes the union's *size* via inclusion-exclusion
+        (`len(a) + len(b) - len(a & b)`) instead of building the union set
+        itself (`a | b`) - same result, one fewer set allocation per call,
+        which matters here since this runs inside `compute_related_pages`'s
+        O(N^2) loop.
+
         When `tag_weights` is given (see `compute_tag_weights`), each tag
         contributes its weight instead of a flat `1` to both the
         intersection and union sums - rare, shared tags count for more
@@ -165,12 +171,13 @@ class Util:
         Returns:
             A score between 0 (no shared tag) and 1 (identical tag sets).
         """
-        union = tags_a | tags_b
+        intersection = len(tags_a & tags_b)
+        union = len(tags_a) + len(tags_b) - intersection
         if not union:
             return 0.0
 
         if tag_weights is None:
-            return len(tags_a & tags_b) / len(union)
+            return intersection / union
 
         intersection_weight = sum(tag_weights.get(t, 1) for t in tags_a & tags_b)
         union_weight = sum(tag_weights.get(t, 1) for t in union)
@@ -186,7 +193,10 @@ class Util:
         """Precompute every page's related pages in a single pass.
 
         Only unique pairs are scored (N*(N-1)/2 instead of N*(N-1)), since
-        the Jaccard score is symmetric.
+        the Jaccard score is symmetric. Each page's tags are converted to a
+        `set` once upfront, rather than once per pair it appears in -
+        rebuilding it inside the inner loop would mean up to N-1 redundant
+        `set()` calls per page, on top of the O(N^2) pair count itself.
 
         Args:
             tags_index: output of `build_tags_index`.
@@ -204,12 +214,11 @@ class Util:
             src_uri: [] for src_uri in tags_index
         }
 
-        entries = list(tags_index.items())
-        for i, (src_uri_a, entry_a) in enumerate(entries):
-            tags_a = set(entry_a.tags)
-            for src_uri_b, entry_b in entries[i + 1 :]:
+        entries = [(src_uri, set(entry.tags)) for src_uri, entry in tags_index.items()]
+        for i, (src_uri_a, tags_a) in enumerate(entries):
+            for src_uri_b, tags_b in entries[i + 1 :]:
                 score = self.jaccard_score(
-                    tags_a, set(entry_b.tags), tag_weights=tag_weights
+                    tags_a, tags_b, tag_weights=tag_weights
                 )
                 if score < min_score:
                     continue
