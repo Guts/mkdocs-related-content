@@ -147,11 +147,11 @@ class Util:
     ) -> float:
         """Similarity between two tag sets: |intersection| / |union|.
 
-        Computes the union's *size* via inclusion-exclusion
-        (`len(a) + len(b) - len(a & b)`) instead of building the union set
-        itself (`a | b`) - same result, one fewer set allocation per call,
-        which matters here since this runs inside `compute_related_pages`'s
-        O(N^2) loop.
+        Computes the union via inclusion-exclusion
+        (`|a| + |b| - |a & b|`, or the weighted equivalent below) instead
+        of building the union set itself (`a | b`) - same result, one
+        fewer set allocation per call, which matters here since this runs
+        inside `compute_related_pages`'s O(N^2) loop.
 
         When `tag_weights` is given (see `compute_tag_weights`), each tag
         contributes its weight instead of a flat `1` to both the
@@ -171,16 +171,20 @@ class Util:
         Returns:
             A score between 0 (no shared tag) and 1 (identical tag sets).
         """
-        intersection = len(tags_a & tags_b)
-        union = len(tags_a) + len(tags_b) - intersection
-        if not union:
-            return 0.0
+        intersection = tags_a & tags_b
 
         if tag_weights is None:
-            return intersection / union
+            union_size = len(tags_a) + len(tags_b) - len(intersection)
+            return len(intersection) / union_size if union_size else 0.0
 
-        intersection_weight = sum(tag_weights.get(t, 1) for t in tags_a & tags_b)
-        union_weight = sum(tag_weights.get(t, 1) for t in union)
+        def weight_sum(tags: set[str]) -> float:
+            return sum(tag_weights.get(t, 1) for t in tags)
+
+        intersection_weight = weight_sum(intersection)
+        # same inclusion-exclusion as above, applied to weighted sums
+        # instead of counts: sum(A) + sum(B) double-counts the shared
+        # (intersection) part once too many, hence subtracting it back out.
+        union_weight = weight_sum(tags_a) + weight_sum(tags_b) - intersection_weight
         return intersection_weight / union_weight if union_weight else 0.0
 
     def compute_related_pages(
