@@ -19,6 +19,7 @@ DEFAULT_SECTION_TITLE: str = "Related contents"
 DEFAULT_MAX_RELATED: int = 5
 DEFAULT_MIN_SCORE: float = 0.1
 DEFAULT_TAGS_JSON_FILENAME: str = "related-tags.json"
+DEFAULT_WEIGHT_BY_TAG_RARITY: bool = False
 
 # heuristic used only to derive a *temporary* title from a page's own
 # Markdown body when no `title` is set in its frontmatter - see

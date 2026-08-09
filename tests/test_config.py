@@ -27,6 +27,7 @@ from mkdocs_related_content.constants import (
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
     DEFAULT_TAGS_JSON_FILENAME,
+    DEFAULT_WEIGHT_BY_TAG_RARITY,
 )
 from mkdocs_related_content.plugin import RelatedContentPlugin
 
@@ -55,6 +56,7 @@ class TestConfig(BaseTest):
             "css_class": DEFAULT_CSS_CLASS,
             "max_related": DEFAULT_MAX_RELATED,
             "min_score": DEFAULT_MIN_SCORE,
+            "weight_by_tag_rarity": DEFAULT_WEIGHT_BY_TAG_RARITY,
             "use_material_tags": True,
             "export_tags_json": True,
             "tags_json_filename": DEFAULT_TAGS_JSON_FILENAME,
@@ -76,6 +78,7 @@ class TestConfig(BaseTest):
             "css_class": "see-also",
             "max_related": 1,
             "min_score": 0.5,
+            "weight_by_tag_rarity": True,
             "tags_json_filename": "custom-tags.json",
         }
 
@@ -86,6 +89,7 @@ class TestConfig(BaseTest):
         self.assertEqual(plugin.config.css_class, "see-also")
         self.assertEqual(plugin.config.max_related, 1)
         self.assertEqual(plugin.config.min_score, 0.5)
+        self.assertTrue(plugin.config.weight_by_tag_rarity)
         self.assertEqual(plugin.config.tags_json_filename, "custom-tags.json")
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
