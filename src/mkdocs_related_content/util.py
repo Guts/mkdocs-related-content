@@ -9,6 +9,8 @@ from __future__ import annotations
 # standard library
 import json
 import re
+from collections import defaultdict
+from itertools import combinations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -194,13 +196,7 @@ class Util:
         max_related: int,
         tag_weights: dict[str, float] | None = None,
     ) -> dict[str, list[tuple[float, str]]]:
-        """Precompute every page's related pages in a single pass.
-
-        Only unique pairs are scored (N*(N-1)/2 instead of N*(N-1)), since
-        the Jaccard score is symmetric. Each page's tags are converted to a
-        `set` once upfront, rather than once per pair it appears in -
-        rebuilding it inside the inner loop would mean up to N-1 redundant
-        `set()` calls per page, on top of the O(N^2) pair count itself.
+        """Precompute every page's related pages.
 
         Args:
             tags_index: output of `build_tags_index`.
@@ -218,14 +214,36 @@ class Util:
             src_uri: [] for src_uri in tags_index
         }
 
-        entries = [(src_uri, set(entry.tags)) for src_uri, entry in tags_index.items()]
-        for i, (src_uri_a, tags_a) in enumerate(entries):
-            for src_uri_b, tags_b in entries[i + 1 :]:
-                score = self.jaccard_score(tags_a, tags_b, tag_weights=tag_weights)
+        tags_by_page = {
+            src_uri: set(entry.tags) for src_uri, entry in tags_index.items()
+        }
+
+        pages_by_tag: dict[str, list[str]] = defaultdict(list)
+        for src_uri, tags in tags_by_page.items():
+            for tag in tags:
+                pages_by_tag[tag].append(src_uri)
+
+        seen_pairs: set[tuple[str, str]] = set()
+        for pages in pages_by_tag.values():
+            for src_uri_a, src_uri_b in combinations(pages, 2):
+                pair = (
+                    (src_uri_a, src_uri_b)
+                    if src_uri_a < src_uri_b
+                    else (src_uri_b, src_uri_a)
+                )
+                if pair in seen_pairs:
+                    continue
+                seen_pairs.add(pair)
+
+                score = self.jaccard_score(
+                    tags_by_page[pair[0]],
+                    tags_by_page[pair[1]],
+                    tag_weights=tag_weights,
+                )
                 if score < min_score:
                     continue
-                related[src_uri_a].append((score, src_uri_b))
-                related[src_uri_b].append((score, src_uri_a))
+                related[pair[0]].append((score, pair[1]))
+                related[pair[1]].append((score, pair[0]))
 
         for src_uri, scored in related.items():
             # Ties (same score) are broken by src_uri, not left to whatever
