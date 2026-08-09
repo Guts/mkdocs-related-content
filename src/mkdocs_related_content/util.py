@@ -217,9 +217,7 @@ class Util:
         entries = [(src_uri, set(entry.tags)) for src_uri, entry in tags_index.items()]
         for i, (src_uri_a, tags_a) in enumerate(entries):
             for src_uri_b, tags_b in entries[i + 1 :]:
-                score = self.jaccard_score(
-                    tags_a, tags_b, tag_weights=tag_weights
-                )
+                score = self.jaccard_score(tags_a, tags_b, tag_weights=tag_weights)
                 if score < min_score:
                     continue
                 related[src_uri_a].append((score, src_uri_b))
