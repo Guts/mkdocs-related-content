@@ -163,7 +163,38 @@ class TestUtilScoring(unittest.TestCase):
             tags_index=index, min_score=0.1, max_related=2
         )
 
-        self.assertEqual(len(related["a.md"]), 2)
+        # b, c and d all tie at score 1.0 with a - which 2 make the cut
+        # must be deterministic (src_uri order), not incidental
+        self.assertEqual(related["a.md"], [(1.0, "b.md"), (1.0, "c.md")])
+
+    def test_compute_related_pages_ties_are_broken_deterministically(self):
+        """Same pages, same tags, inserted in a different order: the
+        `max_related` cut must land on the same pages regardless, or a
+        rebuild - or a future rewrite of this loop (e.g. an inverted-index
+        traversal instead of a full pairwise scan) - could silently change
+        which related pages a reader sees.
+        """
+        entries = {
+            "z.md": PageTagsEntry(src_uri="z.md", url="z/", tags=["api"]),
+            "a.md": PageTagsEntry(src_uri="a.md", url="a/", tags=["api"]),
+            "m.md": PageTagsEntry(src_uri="m.md", url="m/", tags=["api"]),
+            "b.md": PageTagsEntry(src_uri="b.md", url="b/", tags=["api"]),
+        }
+        index_in_order = {k: entries[k] for k in ["z.md", "a.md", "m.md", "b.md"]}
+        index_reversed = {k: entries[k] for k in ["b.md", "m.md", "a.md", "z.md"]}
+
+        related_in_order = self.plg_utils.compute_related_pages(
+            tags_index=index_in_order, min_score=0.1, max_related=2
+        )
+        related_reversed = self.plg_utils.compute_related_pages(
+            tags_index=index_reversed, min_score=0.1, max_related=2
+        )
+
+        # both must keep the 2 alphabetically-first src_uris, in the same
+        # order, no matter which order the pages were discovered in
+        expected = [(1.0, "a.md"), (1.0, "b.md")]
+        self.assertEqual(related_in_order["z.md"], expected)
+        self.assertEqual(related_reversed["z.md"], expected)
 
     def test_compute_related_pages_respects_min_score(self):
         index = {

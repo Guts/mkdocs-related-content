@@ -217,7 +217,12 @@ class Util:
                 related[src_uri_b].append((score, src_uri_a))
 
         for src_uri, scored in related.items():
-            scored.sort(key=lambda pair: pair[0], reverse=True)
+            # Ties (same score) are broken by src_uri, not left to whatever
+            # order pairs happened to be discovered in - which pages make
+            # the `max_related` cut must stay stable across builds and
+            # implementations (e.g. an inverted-index-based rewrite of this
+            # loop), not depend on incidental dict/traversal order.
+            scored.sort(key=lambda pair: (-pair[0], pair[1]))
             related[src_uri] = scored[:max_related]
 
         return related
