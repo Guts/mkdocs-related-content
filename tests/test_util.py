@@ -352,6 +352,23 @@ class TestUtilTagsIndex(unittest.TestCase):
 
         self.assertEqual(set(with_none), set(without_arg))
 
+    def test_build_tags_index_respects_exclude_from_scoring(self):
+        index = self.plg_utils.build_tags_index(files=self.files)
+
+        self.assertNotIn("page-excluded.md", index)
+        # tagged and otherwise indexable - only excluded by its own
+        # frontmatter, not by match_path or allowed_tags
+        self.assertIn("page-a.md", index)
+
+    def test_build_tags_index_ignores_malformed_related_content_frontmatter(self):
+        """`related_content: true` (not a mapping) must not crash the
+        indexing pass, and must not be treated as an opt-out either - only
+        the documented `exclude_from_scoring: true` shape does that.
+        """
+        index = self.plg_utils.build_tags_index(files=self.files)
+
+        self.assertIn("page-malformed-related-content.md", index)
+
     def test_write_tags_json_shape(self):
         index = self.plg_utils.build_tags_index(files=self.files)
 

@@ -138,6 +138,38 @@ class TestBuildRelatedContent(BaseTest):
             page_a_related = _extract_related_section(page_a_html)
             self.assertIn("page-hidden/", page_a_related)
 
+    def test_exclude_from_scoring_removes_page_everywhere(self):
+        """`page-excluded.md` opts out via its own frontmatter
+        (`related_content: {exclude_from_scoring: true}`), sharing the
+        `api` tag with `page-a.md`. Unlike `hide: [related_content]`
+        (template-only, see docs/index.md), this must remove it from the
+        feature entirely: absent from `page-a.md`'s related pages, and
+        showing no related-pages section on its own page either.
+        """
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            testproject_path = self.setup_clean_mkdocs_folder(
+                mkdocs_yml_filepath=Path("tests/fixtures/mkdocs_minimal.yml"),
+                output_path=Path(tmpdirname),
+            )
+            site_dir = Path(tmpdirname) / "site"
+            cli_result = self.build_docs_setup(
+                mkdocs_yml_filepath=testproject_path / "mkdocs.yml",
+                output_path=site_dir,
+                strict=True,
+            )
+            self._assert_build_succeeded(cli_result)
+
+            page_a_html = (site_dir / "page-a" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            page_a_related = _extract_related_section(page_a_html)
+            self.assertNotIn("page-excluded/", page_a_related)
+
+            excluded_html = (site_dir / "page-excluded" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            self.assertEqual(_extract_related_section(excluded_html), "")
+
     def test_related_page_url_is_correctly_relative_for_nested_pages(self):
         """`sub/page-nested.md` is one level deep and shares the `api` tag
         with `page-a.md`. `RelatedPage.url` is computed relative to each

@@ -19,6 +19,17 @@ To compute related pages, the plugin uses:
 | :-------- | :-------------: | :----- |
 | `page.meta.tags` | **required** for a page to participate | A page without `tags` is skipped entirely: it's never scored, and never listed as related to another page. |
 | `page.meta.title` | *optional* | Used as the related page's display title. If absent, the plugin falls back to the page's first Markdown heading, then to a humanized filename - see [How it works](index.md#how-the-score-is-computed). |
+| `page.meta.related_content.exclude_from_scoring` | *optional* | Set to `true` to opt a page out entirely - same effect as failing [`match_path`](#plugin-options), but decided per-page rather than site-wide. The page is never scored, never shown as related content elsewhere, and never given related pages of its own. |
+
+```yaml
+---
+related_content:
+  exclude_from_scoring: true
+---
+```
+
+!!! note "Not the same as `hide: [related_content]`"
+    `hide: [related_content]` (see [the quickstart](index.md#quickstart)) only hides *that page's own* related-pages block - a template-level check, and the page still counts normally in the site-wide similarity computation. `exclude_from_scoring` is the opposite: enforced by the plugin itself, it removes the page from the computation altogether, in both directions.
 
 ----
 
