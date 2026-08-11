@@ -5,6 +5,7 @@ tags:
   - auth
   - python
 ---
+
 # API Auth
 
 Documentation for API authentication.

@@ -5,6 +5,7 @@ tags:
   - auth
   - python
 ---
+
 # API Auth (duplicate)
 
 Same tags as `page-a.md` (similarity score = 1.0), used to test sorting
