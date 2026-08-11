@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 # standard library
+import re
 from typing import TYPE_CHECKING, Literal
 
 # 3rd party
@@ -82,6 +83,7 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
         self.files: Files | None = None
         self.tags_index: dict[str, PageTagsEntry] = {}
         self.related_pages_by_uri: dict[str, list[tuple[float, str]]] = {}
+        self.match_path_pattern: re.Pattern[str] | None = None
 
     def on_config(self, config: MkDocsConfig) -> MkDocsConfig:
         """First event called on build, right after config is loaded.
@@ -107,6 +109,8 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
                 "Material/MaterialX theme and 'tags' plugin detected: "
                 "aligning tag filtering with its configuration."
             )
+
+        self.match_path_pattern = re.compile(self.config.match_path)
 
         return config
 
@@ -137,7 +141,9 @@ class RelatedContentPlugin(BasePlugin[RelatedContentPluginConfig]):
             allowed_tags = self.integration_material_tags.allowed_tags
 
         self.tags_index = self.util.build_tags_index(
-            files=files, allowed_tags=allowed_tags
+            files=files,
+            allowed_tags=allowed_tags,
+            match_path_pattern=self.match_path_pattern,
         )
 
         return files

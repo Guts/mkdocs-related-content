@@ -39,6 +39,7 @@ plugins:
       enabled: true
       css_class: related-pages
       export_tags_json: true
+      match_path: ".*"
       max_related: 5
       min_score: 0.1
       weight_by_tag_rarity: false
@@ -50,6 +51,7 @@ plugins:
 | Option | Type | Default | Description |
 | :----- | :--- | :------ | :----------- |
 | `enabled` | `bool` | `true` | Set to `false` to disable the plugin without removing it from `mkdocs.yml` (e.g. via an environment-driven override). |
+| `match_path` | `str` | `".*"` | Regular expression matched against each page's `src_uri`. A page that doesn't match is excluded from the whole feature: it's never indexed, so it never appears as related content for another page, and never gets a related-pages list of its own. Same option name and semantics as [mkdocs-rss-plugin's `match_path`](https://guts.github.io/mkdocs-rss-plugin/configuration/#match_path). |
 | `section_title` | `str` | `"Related contents"` | Exposed to Jinja as `related_content_section_title`. Purely informational - the plugin doesn't render any HTML itself, your template decides where and how to use it. |
 | `css_class` | `str` | `"related-pages"` | Exposed to Jinja as `related_content_css_class`, for the same reason: a stable, known class name themes can target, that you can rename to avoid clashing with an existing theme class. |
 | `max_related` | `int` | `5` | Maximum number of related pages kept per page, after sorting by descending score. |

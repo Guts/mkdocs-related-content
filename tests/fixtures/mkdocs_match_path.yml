@@ -1,0 +1,10 @@
+site_name: Test Related Content Plugin
+site_url: https://example.org/
+
+plugins:
+  - related-content:
+      match_path: "^page-.*"
+
+theme:
+  name: mkdocs
+  custom_dir: overrides

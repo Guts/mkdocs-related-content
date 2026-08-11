@@ -51,7 +51,10 @@ class Util:
     """
 
     def build_tags_index(
-        self, files: Files, allowed_tags: set[str] | None = None
+        self,
+        files: Files,
+        allowed_tags: set[str] | None = None,
+        match_path_pattern: re.Pattern[str] | None = None,
     ) -> dict[str, PageTagsEntry]:
         """Build a {src_uri: PageTagsEntry} index by reading YAML frontmatter
         directly from disk.
@@ -65,6 +68,12 @@ class Util:
             allowed_tags: optional allow-list (typically Material's tags
                 plugin `tags_allowed` setting) used to discard unknown tags.
                 None means no filtering.
+            match_path_pattern: optional compiled regex (see the plugin's
+                `match_path` option) matched against each page's `src_uri`.
+                A page that doesn't match is skipped entirely - it never
+                appears as a related page for another page, and never gets
+                related pages of its own, since it's absent from the
+                returned index either way. `None` means every page matches.
 
         Returns:
             The index, keyed by `File.src_uri`. Pages without any (valid)
@@ -73,6 +82,11 @@ class Util:
         index: dict[str, PageTagsEntry] = {}
 
         for file in files.documentation_pages():
+            if match_path_pattern is not None and not match_path_pattern.match(
+                file.src_uri
+            ):
+                continue
+
             if not file.abs_src_path:
                 # generated / in-memory files have no source to read from
                 continue

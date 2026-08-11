@@ -15,9 +15,10 @@ MKDOCS_LOGGER_NAME: str = "[related-content]"
 
 # default plugin option values
 DEFAULT_CSS_CLASS: str = "related-pages"
-DEFAULT_SECTION_TITLE: str = "Related contents"
+DEFAULT_MATCH_PATH: str = ".*"
 DEFAULT_MAX_RELATED: int = 5
 DEFAULT_MIN_SCORE: float = 0.1
+DEFAULT_SECTION_TITLE: str = "Related contents"
 DEFAULT_TAGS_JSON_FILENAME: str = "related-tags.json"
 DEFAULT_WEIGHT_BY_TAG_RARITY: bool = False
 

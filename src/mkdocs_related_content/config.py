@@ -11,6 +11,7 @@ from mkdocs.config.base import Config
 # package
 from mkdocs_related_content.constants import (
     DEFAULT_CSS_CLASS,
+    DEFAULT_MATCH_PATH,
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
@@ -27,6 +28,9 @@ class RelatedContentPluginConfig(Config):
     """Configuration for the Related Content plugin for Mkdocs."""
 
     enabled = config_options.Type(bool, default=True)
+
+    # which pages the plugin runs on
+    match_path = config_options.Type(str, default=DEFAULT_MATCH_PATH)
 
     # display
     section_title = config_options.Type(str, default=DEFAULT_SECTION_TITLE)

@@ -23,6 +23,7 @@ from mkdocs.config.base import Config
 from mkdocs_related_content.config import RelatedContentPluginConfig
 from mkdocs_related_content.constants import (
     DEFAULT_CSS_CLASS,
+    DEFAULT_MATCH_PATH,
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
@@ -52,6 +53,7 @@ class TestConfig(BaseTest):
         """An un-configured plugin instance falls back to documented defaults."""
         expected = {
             "enabled": True,
+            "match_path": DEFAULT_MATCH_PATH,
             "section_title": DEFAULT_SECTION_TITLE,
             "css_class": DEFAULT_CSS_CLASS,
             "max_related": DEFAULT_MAX_RELATED,

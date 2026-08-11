@@ -180,6 +180,40 @@ class TestBuildRelatedContent(BaseTest):
             self._assert_build_succeeded(cli_result)
             self.assertFalse((site_dir / "related-tags.json").exists())
 
+    def test_match_path_excludes_pages_from_the_whole_feature(self):
+        """`match_path: "^page-.*"` only lets `page-*.md` pages in.
+        `sub/page-nested.md` (tag `api`, shared with `page-a.md`) must be:
+        - absent from `page-a.md`'s own related pages (never a candidate)
+        - itself missing the related-pages section entirely (never a
+          subject either), even though Mkdocs still builds that page
+          normally - `match_path` only scopes the plugin, not the site.
+        """
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            testproject_path = self.setup_clean_mkdocs_folder(
+                mkdocs_yml_filepath=Path("tests/fixtures/mkdocs_match_path.yml"),
+                output_path=Path(tmpdirname),
+            )
+            site_dir = Path(tmpdirname) / "site"
+            cli_result = self.build_docs_setup(
+                mkdocs_yml_filepath=testproject_path / "mkdocs.yml",
+                output_path=site_dir,
+                strict=True,
+            )
+            self._assert_build_succeeded(cli_result)
+
+            page_a_html = (site_dir / "page-a" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            page_a_related = _extract_related_section(page_a_html)
+            self.assertNotIn("sub/page-nested/", page_a_related)
+            # still related to at least one other page-*.md
+            self.assertTrue(page_a_related)
+
+            nested_html = (site_dir / "sub" / "page-nested" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            self.assertEqual(_extract_related_section(nested_html), "")
+
     def test_fallback_json_export_without_material_tags(self):
         """No Material `tags` plugin declared: our own export must appear."""
         with tempfile.TemporaryDirectory() as tmpdirname:
