@@ -1,4 +1,4 @@
-{% if related_pages %}
+{% if related_pages and "related_content" not in (page.meta.hide or []) %}
 <div class="{{ related_content_css_class }}">
   <h2>{{ related_content_section_title }}</h2>
   <ul>
