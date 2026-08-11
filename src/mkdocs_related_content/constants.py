@@ -27,6 +27,12 @@ DEFAULT_WEIGHT_BY_TAG_RARITY: bool = False
 # `util.Util._guess_title` for how (and why) it's used.
 FIRST_HEADING_PATTERN: str = r"^#\s+(.+?)\s*$"
 
+# per-page frontmatter opt-out, e.g.:
+#   related_content:
+#     exclude_from_scoring: true
+FRONTMATTER_KEY: str = "related_content"
+FRONTMATTER_EXCLUDE_FROM_SCORING_KEY: str = "exclude_from_scoring"
+
 # unused for now, kept for parity with plugins (like mkdocs-rss-plugin) that
 # cache heavier computations across builds
 DEFAULT_CACHE_FOLDER: Path = Path(".cache/plugins/related_content")

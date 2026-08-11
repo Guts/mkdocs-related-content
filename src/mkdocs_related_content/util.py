@@ -22,6 +22,8 @@ from mkdocs.utils import meta as mkdocs_meta
 # package
 from mkdocs_related_content.constants import (
     FIRST_HEADING_PATTERN,
+    FRONTMATTER_EXCLUDE_FROM_SCORING_KEY,
+    FRONTMATTER_KEY,
     MKDOCS_LOGGER_NAME,
 )
 from mkdocs_related_content.models import PageTagsEntry, RelatedPage
@@ -75,6 +77,21 @@ class Util:
                 related pages of its own, since it's absent from the
                 returned index either way. `None` means every page matches.
 
+        A page can also opt itself out via its own YAML frontmatter,
+        regardless of `match_path`:
+
+        ```yaml
+        related_content:
+          exclude_from_scoring: true
+        ```
+
+        This has the exact same effect as failing `match_path` - the page
+        is entirely absent from the returned index - but is a per-page
+        author decision rather than a site-wide, path-based one. Unlike
+        the `hide: [related_content]` frontmatter convention (a purely
+        template-level check - see docs/index.md), this is read and
+        enforced by the plugin itself, before any candidate scoring runs.
+
         Returns:
             The index, keyed by `File.src_uri`. Pages without any (valid)
             tag are omitted.
@@ -98,6 +115,13 @@ class Util:
                 continue
 
             _, page_meta = mkdocs_meta.get_data(source)
+
+            related_content_meta = page_meta.get(FRONTMATTER_KEY)
+            if isinstance(related_content_meta, dict) and related_content_meta.get(
+                FRONTMATTER_EXCLUDE_FROM_SCORING_KEY
+            ):
+                continue
+
             tags = [str(tag) for tag in (page_meta.get("tags") or [])]
 
             if allowed_tags is not None:
