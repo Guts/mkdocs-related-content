@@ -38,7 +38,7 @@ Each `RelatedPage` has: `title`, `url` (already relative to the page being rende
 A minimal template override:
 
 ```jinja title="overrides/partials/related.html"
-{% if related_pages %}
+{% if related_pages and "related_content" not in (page.meta.hide or []) %}
 <div class="{{ related_content_css_class }}">
   <h2>{{ related_content_section_title }}</h2>
   <ul>
@@ -49,6 +49,18 @@ A minimal template override:
 </div>
 {% endif %}
 ```
+
+!!! tip "Hiding the block on a specific page"
+    The `"related_content" not in (page.meta.hide or [])` check follows MaterialX/Material's own [`hide` frontmatter convention](https://jaywhj.github.io/mkdocs-materialx/setup/setting-up-navigation.html#hiding-the-sidebars) (the same one used for `hide: [navigation]` or `hide: [toc]`) - so a page can opt out of the block with:
+
+    ```yaml
+    ---
+    hide:
+      - related_content
+    ---
+    ```
+
+    This is purely a template-level check: the plugin itself doesn't read `hide` and knows nothing about it. The page is still indexed and scored normally, and still shows up as related content *on other pages* - only its own block is suppressed. Since the plugin doesn't render any HTML itself, this only works if your template includes the check above.
 
 Included from your theme's `main.html`:
 

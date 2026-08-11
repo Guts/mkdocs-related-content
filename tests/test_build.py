@@ -103,6 +103,41 @@ class TestBuildRelatedContent(BaseTest):
             self.assertIn("page-b/", related_section)
             self.assertNotIn("page-c/", related_section)
 
+    def test_hide_frontmatter_only_suppresses_display_not_computation(self):
+        """`page-hidden.md` sets `hide: [related_content]` in its own
+        frontmatter. Per Material/MaterialX's native `hide` convention
+        (https://jaywhj.github.io/mkdocs-materialx/setup/setting-up-navigation.html#hiding-the-sidebars),
+        this is purely a template-level check - the plugin itself doesn't
+        know or care about it. So `page-hidden.md`'s own rendered page must
+        show no related-pages section at all, while it must still show up
+        as related content *on other pages* (`page-a.md` shares the `api`
+        tag with it) - hiding a page's own block doesn't remove it from
+        the site-wide similarity computation.
+        """
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            testproject_path = self.setup_clean_mkdocs_folder(
+                mkdocs_yml_filepath=Path("tests/fixtures/mkdocs_minimal.yml"),
+                output_path=Path(tmpdirname),
+            )
+            site_dir = Path(tmpdirname) / "site"
+            cli_result = self.build_docs_setup(
+                mkdocs_yml_filepath=testproject_path / "mkdocs.yml",
+                output_path=site_dir,
+                strict=True,
+            )
+            self._assert_build_succeeded(cli_result)
+
+            hidden_html = (site_dir / "page-hidden" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            self.assertEqual(_extract_related_section(hidden_html), "")
+
+            page_a_html = (site_dir / "page-a" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            page_a_related = _extract_related_section(page_a_html)
+            self.assertIn("page-hidden/", page_a_related)
+
     def test_related_page_url_is_correctly_relative_for_nested_pages(self):
         """`sub/page-nested.md` is one level deep and shares the `api` tag
         with `page-a.md`. `RelatedPage.url` is computed relative to each
