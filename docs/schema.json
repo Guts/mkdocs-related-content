@@ -22,6 +22,14 @@
               "type": "boolean",
               "default": true
             },
+            "match_path": {
+              "title": "Regular expression to match pages to include.",
+              "description": "A page whose src_uri doesn't match is excluded from the whole feature: never indexed, never shown as related content, never given related pages of its own.",
+              "markdownDescription": "configuration.md#plugin-options",
+              "type": "string",
+              "default": ".*",
+              "format": "regex"
+            },
             "section_title": {
               "title": "Title exposed to Jinja as `related_content_section_title`.",
               "description": "Purely informational - the plugin doesn't render any HTML itself, your template decides where and how to use it.",

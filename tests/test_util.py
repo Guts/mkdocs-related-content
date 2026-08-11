@@ -14,6 +14,7 @@
 
 # Standard library
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -330,6 +331,26 @@ class TestUtilTagsIndex(unittest.TestCase):
         self.assertEqual(set(index["page-a.md"].tags), {"api", "auth"})
         # 'page-c.md' only has 'gardening', filtered out entirely
         self.assertNotIn("page-c.md", index)
+
+    def test_build_tags_index_respects_match_path_pattern(self):
+        # only pages under sub/ are indexed
+        pattern = re.compile(r"sub/.*")
+
+        index = self.plg_utils.build_tags_index(
+            files=self.files, match_path_pattern=pattern
+        )
+
+        self.assertIn("sub/page-nested.md", index)
+        # tagged, but outside sub/ - excluded regardless of its own tags
+        self.assertNotIn("page-a.md", index)
+
+    def test_build_tags_index_none_pattern_matches_everything(self):
+        with_none = self.plg_utils.build_tags_index(
+            files=self.files, match_path_pattern=None
+        )
+        without_arg = self.plg_utils.build_tags_index(files=self.files)
+
+        self.assertEqual(set(with_none), set(without_arg))
 
     def test_write_tags_json_shape(self):
         index = self.plg_utils.build_tags_index(files=self.files)
