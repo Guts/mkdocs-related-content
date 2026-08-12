@@ -3,7 +3,7 @@ build-backend = "setuptools.build_meta"
 requires = ["setuptools>=64", "setuptools-scm>=8"]
 
 [project]
-name = "mkdocs-related-content"
+name = "mkdocs-related-content-plugin"
 description = "Properdocs/MkDocs plugin that computes, for every tagged page, a list of related pages based on shared tags, and exposes it to the Jinja context."
 dynamic = ["version"]
 readme = "README.md"
