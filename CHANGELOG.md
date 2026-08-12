@@ -17,4 +17,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.1.0
 
-- First version
+- First version with initial functional perimeter: Jaccard similarity scoring between pages based on tags.
