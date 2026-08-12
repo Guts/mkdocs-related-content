@@ -1,8 +1,8 @@
 # Static related contents - Properdocs / MkDocs plugin
 
-[![PyPi version badge](https://badgen.net/pypi/v/mkdocs-related-content)](https://pypi.org/project/mkdocs-related-content/)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/mkdocs-related-content)](https://pypi.org/project/mkdocs-related-content/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mkdocs-related-content)](https://pypi.org/project/mkdocs-related-content/)
+[![PyPi version badge](https://badgen.net/pypi/v/mkdocs-related-content-plugin)](https://pypi.org/project/mkdocs-related-content-plugin/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/mkdocs-related-content-plugin)](https://pypi.org/project/mkdocs-related-content/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mkdocs-related-content-plugin)](https://pypi.org/project/mkdocs-related-content/)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Guts_mkdocs-related-content&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Guts_mkdocs-related-content)
 [![codecov](https://codecov.io/gh/Guts/mkdocs-related-content/branch/main/graph/badge.svg?token=A0XPLKiwiW)](https://codecov.io/gh/Guts/mkdocs-related-content)
