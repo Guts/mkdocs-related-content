@@ -140,6 +140,7 @@ plugins:
 
 theme:
   name: materialx
+  custom_dir: docs/theme/overrides
   favicon: material/vector-link
   features:
     - content.action.edit

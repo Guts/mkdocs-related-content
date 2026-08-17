@@ -5,6 +5,9 @@ tags:
   - options
   - plugin
   - settings
+related_content:
+  links:
+    - MaterialX blog plugin links: https://jaywhj.github.io/mkdocs-materialx/plugins/blog.html#meta.links
 ---
 
 To compute related pages, the plugin uses:

@@ -37,15 +37,17 @@ Each `RelatedPage` has: `title`, `url` (already relative to the page being rende
 
 A minimal template override:
 
-```jinja title="overrides/partials/related.html"
+```jinja title="overrides/partials/related.html.jinja2"
 {% if related_pages and "related_content" not in (page.meta.hide or []) %}
 <div class="{{ related_content_css_class }}">
-  <h2>{{ related_content_section_title }}</h2>
-  <ul>
-  {% for r in related_pages %}
-    <li><a href="{{ r.url }}">{{ r.title }}</a></li>
-  {% endfor %}
-  </ul>
+    <h2 id="related-content">{{ related_content_section_title }}</h2>
+    <ul>
+        {% for r in related_pages %}
+        <li><a href="{{ r.url }}" title="Lien vers {{ r.title }}">{{ r.title }}</a> - {% if r.manual is false %}<small
+                title="Shared tags: {{ ', '.join(r.shared_tags) }}"><i>Similarity score: {{
+                    "%.0f"|format(r.score * 100) }}%</i></small>{% else %}<small>Manually defined</small> {% endif %}</li>
+        {% endfor %}
+    </ul>
 </div>
 {% endif %}
 ```
@@ -68,7 +70,7 @@ Included from your theme's `main.html`:
 {% extends "base.html" %}
 {% block content %}
   {{ super() }}
-  {% include "partials/related.html" %}
+  {% include "partials/related.html.jinja2" %}
 {% endblock %}
 ```
 
