@@ -46,9 +46,17 @@
               "minLength": 1
             },
             "max_related": {
-              "title": "Maximum number of related pages kept per page.",
-              "description": "Applied after sorting candidates by descending score.",
-              "markdownDescription": "configuration.md#plugin-options",
+              "title": "Maximum related pages shown per page, manual and automatic combined.",
+              "description": "Applied after sorting automatic candidates by descending score. Manual links (related_content.links) are counted against this total too - see max_manual_related.",
+              "markdownDescription": "configuration.md#manual-links",
+              "type": "integer",
+              "default": 5,
+              "minimum": 0
+            },
+            "max_manual_related": {
+              "title": "Maximum number of manual links honored within max_related.",
+              "description": "Manual links (related_content.links frontmatter) always take priority over automatic suggestions, up to this count. Remaining slots, up to max_related, go to automatic candidates.",
+              "markdownDescription": "configuration.md#manual-links",
               "type": "integer",
               "default": 5,
               "minimum": 0

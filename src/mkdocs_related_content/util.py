@@ -13,6 +13,7 @@ from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 # 3rd party
 from mkdocs.plugins import get_plugin_logger
@@ -24,9 +25,10 @@ from mkdocs_related_content.constants import (
     FIRST_HEADING_PATTERN,
     FRONTMATTER_EXCLUDE_FROM_SCORING_KEY,
     FRONTMATTER_KEY,
+    FRONTMATTER_LINKS_KEY,
     MKDOCS_LOGGER_NAME,
 )
-from mkdocs_related_content.models import PageTagsEntry, RelatedPage
+from mkdocs_related_content.models import ManualLink, PageTagsEntry, RelatedPage
 
 if TYPE_CHECKING:
     from mkdocs.structure.files import Files
@@ -38,6 +40,72 @@ if TYPE_CHECKING:
 logger = get_plugin_logger(MKDOCS_LOGGER_NAME)
 
 _FIRST_HEADING_RE = re.compile(FIRST_HEADING_PATTERN, re.MULTILINE)
+
+
+def _is_external_link(link: str) -> bool:
+    """True for anything that isn't a docs_dir-relative internal path.
+
+    Covers `http://`, `https://`, `mailto:`, protocol-relative `//cdn...`,
+    and any other URL with a scheme - not just the two most common ones,
+    since a `related_content.links` entry could reasonably be a `mailto:`
+    or an `ftp://` link too.
+    """
+    return bool(urlparse(link).scheme) or link.startswith("//")
+
+
+def _parse_manual_links(raw_links: list, self_src_uri: str) -> tuple[ManualLink, ...]:
+    """Parse a page's `related_content.links` frontmatter into `ManualLink`s.
+
+    Follows the same `nav`-like syntax as MaterialX/Material's blog plugin
+    `links` property (https://jaywhj.github.io/mkdocs-materialx/plugins/blog.html#meta.links):
+    each entry is either a bare string (target, no label) or a single-key
+    mapping (`{label: target}`). Nested sections (mapping value is a list,
+    as the blog plugin also supports for its nav-like sidebar) aren't
+    supported here - they don't map to a flat related-content list - and
+    are skipped with a debug log rather than failing the build. A
+    self-reference is dropped; duplicate targets keep only the first
+    occurrence, in the author's own order.
+
+    Args:
+        raw_links: the raw `related_content.links` list from frontmatter.
+        self_src_uri: the page's own `src_uri`, to filter self-references.
+
+    Returns:
+        Parsed, deduplicated, ordered `ManualLink`s.
+    """
+    seen: set[str] = set()
+    parsed: list[ManualLink] = []
+
+    for item in raw_links:
+        target: str | None = None
+        label: str | None = None
+
+        if isinstance(item, str):
+            target = item
+        elif isinstance(item, dict) and len(item) == 1:
+            label, value = next(iter(item.items()))
+            if isinstance(value, str):
+                target = value
+            else:
+                logger.debug(
+                    "'related_content.links' entry has a nested section "
+                    f"under {label!r}, which isn't supported here - skipped."
+                )
+                continue
+        else:
+            logger.debug(
+                f"Unrecognized 'related_content.links' entry, skipped: {item!r}"
+            )
+            continue
+
+        target = str(target)
+        if target == self_src_uri or target in seen:
+            continue
+        seen.add(target)
+        parsed.append(ManualLink(target=target, label=str(label) if label else None))
+
+    return tuple(parsed)
+
 
 # ############################################################################
 # ########## Classes ###############
@@ -92,9 +160,29 @@ class Util:
         template-level check - see docs/index.md), this is read and
         enforced by the plugin itself, before any candidate scoring runs.
 
+        A page can also pin its own hand-picked suggestions, which take
+        priority over automatically-computed ones (see
+        `resolve_related_pages`):
+
+        ```yaml
+        related_content:
+          links:
+            - some-page.md
+            - Custom label: some-other-page.md
+            - https://example.org/some-external-resource/
+        ```
+
+        Same `nav`-like syntax as MaterialX/Material's blog plugin `links`
+        property - a bare string, or a single-key `{label: target}` mapping
+        for an explicit title (always used as-is, no auto-resolution) - see
+        `_parse_manual_links`. A target may be internal (`src_uri`-style) or
+        an external URL. A page with `links` but no `tags` is still indexed
+        (it just never gets automatic suggestions of its own, nor is it
+        ever suggested to others via scoring).
+
         Returns:
-            The index, keyed by `File.src_uri`. Pages without any (valid)
-            tag are omitted.
+            The index, keyed by `File.src_uri`. A page is omitted only if
+            it has neither a (valid) tag nor any `related_content.links`.
         """
         index: dict[str, PageTagsEntry] = {}
 
@@ -127,7 +215,13 @@ class Util:
             if allowed_tags is not None:
                 tags = [tag for tag in tags if tag in allowed_tags]
 
-            if not tags:
+            manual_links: tuple[ManualLink, ...] = ()
+            if isinstance(related_content_meta, dict):
+                raw_links = related_content_meta.get(FRONTMATTER_LINKS_KEY)
+                if isinstance(raw_links, list):
+                    manual_links = _parse_manual_links(raw_links, file.src_uri)
+
+            if not tags and not manual_links:
                 continue
 
             index[file.src_uri] = PageTagsEntry(
@@ -137,9 +231,10 @@ class Util:
                 fallback_title=self._guess_title(
                     page_meta=page_meta, source=source, src_uri=file.src_uri
                 ),
+                manual_links=manual_links,
             )
 
-        logger.debug(f"{len(index)} page(s) indexed with tags.")
+        logger.debug(f"{len(index)} page(s) indexed with tags and/or manual links.")
         return index
 
     @staticmethod
@@ -239,10 +334,17 @@ class Util:
         Args:
             tags_index: output of `build_tags_index`.
             min_score: minimum score for a page to be considered related.
-            max_related: maximum number of related pages kept per page.
+            max_related: maximum number of related pages kept per page -
+                shared between automatic and manual suggestions together,
+                see `resolve_related_pages`.
             tag_weights: optional per-tag weight passed to `jaccard_score`
                 (see `compute_tag_weights`). `None` (the default) scores
                 every tag equally.
+
+        A page's own `related_content.links` targets (see `build_tags_index`)
+        are kept out of its *automatic* candidates here, before `max_related`
+        caps the list - a page already pinned manually never wastes a slot
+        that a fresh automatic candidate could fill instead.
 
         Returns:
             {src_uri: [(score, related_src_uri), ...]}, sorted by descending
@@ -254,6 +356,10 @@ class Util:
 
         tags_by_page = {
             src_uri: set(entry.tags) for src_uri, entry in tags_index.items()
+        }
+        manual_targets_by_page = {
+            src_uri: {link.target for link in entry.manual_links}
+            for src_uri, entry in tags_index.items()
         }
 
         pages_by_tag: dict[str, list[str]] = defaultdict(list)
@@ -280,8 +386,12 @@ class Util:
                 )
                 if score < min_score:
                     continue
-                related[pair[0]].append((score, pair[1]))
-                related[pair[1]].append((score, pair[0]))
+                # one-directional: pair[0] manually pinning pair[1] doesn't
+                # stop pair[1] from suggesting pair[0] back automatically.
+                if pair[1] not in manual_targets_by_page[pair[0]]:
+                    related[pair[0]].append((score, pair[1]))
+                if pair[0] not in manual_targets_by_page[pair[1]]:
+                    related[pair[1]].append((score, pair[0]))
 
         for src_uri, scored in related.items():
             # Ties (same score) are broken by src_uri, not left to whatever
@@ -301,14 +411,19 @@ class Util:
         current_tags: set[str],
         files: Files,
         current_page_url: str,
+        manual_links: tuple[ManualLink, ...] = (),
+        max_related: int = 5,
+        max_manual_related: int = 5,
     ) -> list[RelatedPage]:
-        """Turn `(score, src_uri)` pairs into template-ready `RelatedPage` objects.
+        """Turn automatic candidates and the page's own manual links into
+        template-ready `RelatedPage` objects, manual ones first.
 
         Prefers the real, fully-resolved `Page.title` whenever Mkdocs has
         already produced it (i.e. the related page was processed earlier in
         the build), and falls back to the frontmatter/heading guess from
         `tags_index` otherwise. In practice the two are almost always
-        identical.
+        identical. A manual link's own `label` (see `ManualLink`), when
+        given, always wins over both - it's an explicit author choice.
 
         `RelatedPage.url` is computed relative to `current_page_url` (via
         Mkdocs' own `get_relative_url`) rather than left root-relative like
@@ -318,6 +433,17 @@ class Util:
         any page that isn't at the site root itself. Resolving them here
         means every consumer gets a correct, ready-to-use `href` without
         having to remember to apply Mkdocs' `| url` Jinja filter themselves.
+        An *external* manual link (see `_is_external_link`) is the one
+        exception - its `url` is used exactly as written, since there's no
+        internal file to resolve it against.
+
+        Manual links (`related_content.links`, see `build_tags_index`) are
+        resolved first, capped to `max_manual_related`, and always shown
+        regardless of `min_score` - an explicit author choice overrides the
+        automatic threshold. Remaining slots, up to `max_related` in total,
+        go to automatic candidates - `compute_related_pages` already keeps
+        those free of anything also listed manually, so no duplicate work
+        and no wasted slot.
 
         Args:
             related: `(score, src_uri)` pairs, typically from
@@ -329,13 +455,75 @@ class Util:
             current_page_url: root-relative URL of the page these related
                 pages are for (`page.url`), used to make each `RelatedPage.url`
                 relative to it.
+            manual_links: this page's own `related_content.links`, in
+                frontmatter order - typically `tags_index[this_page].manual_links`.
+            max_related: total number of related pages shown, manual and
+                automatic combined.
+            max_manual_related: maximum number of manual links honored
+                within that total.
 
         Returns:
-            Ready-to-render related pages, in the same order as `related`.
+            Ready-to-render related pages: manual ones first (in the
+            author's own order), then automatic ones by descending score.
         """
         resolved: list[RelatedPage] = []
+        seen_src_uris: set[str] = set()
 
-        for score, src_uri in related:
+        for manual_link in manual_links[:max_manual_related]:
+            target = manual_link.target
+            if target in seen_src_uris:
+                continue
+
+            if _is_external_link(target):
+                # no file to resolve, no tags to compare, no relative URL
+                # to compute - used exactly as written in the frontmatter
+                resolved.append(
+                    RelatedPage(
+                        title=manual_link.label or target,
+                        url=target,
+                        shared_tags=[],
+                        score=1.0,
+                        manual=True,
+                    )
+                )
+                seen_src_uris.add(target)
+                continue
+
+            other_file = files.get_file_from_path(target)
+            if other_file is None:
+                logger.debug(
+                    f"'related_content.links' entry not found, skipped: {target}"
+                )
+                continue
+
+            entry = tags_index.get(target)
+            if manual_link.label:
+                title = manual_link.label
+            else:
+                title = entry.fallback_title if entry is not None else None
+                if other_file.page is not None and other_file.page.title:
+                    title = other_file.page.title
+
+            shared_tags = (
+                sorted(current_tags & set(entry.tags)) if entry is not None else []
+            )
+
+            resolved.append(
+                RelatedPage(
+                    title=title or target,
+                    url=get_relative_url(other_file.url, current_page_url),
+                    shared_tags=shared_tags,
+                    score=1.0,
+                    manual=True,
+                )
+            )
+            seen_src_uris.add(target)
+
+        auto_budget = max(0, max_related - len(resolved))
+        for score, src_uri in related[:auto_budget]:
+            if src_uri in seen_src_uris:
+                continue
+
             entry = tags_index[src_uri]
             other_file = files.get_file_from_path(src_uri)
 
@@ -349,8 +537,10 @@ class Util:
                     url=get_relative_url(entry.url, current_page_url),
                     shared_tags=sorted(current_tags & set(entry.tags)),
                     score=round(score, 3),
+                    manual=False,
                 )
             )
+            seen_src_uris.add(src_uri)
 
         return resolved
 

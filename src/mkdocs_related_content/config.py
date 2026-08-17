@@ -12,6 +12,7 @@ from mkdocs.config.base import Config
 from mkdocs_related_content.constants import (
     DEFAULT_CSS_CLASS,
     DEFAULT_MATCH_PATH,
+    DEFAULT_MAX_MANUAL_RELATED,
     DEFAULT_MAX_RELATED,
     DEFAULT_MIN_SCORE,
     DEFAULT_SECTION_TITLE,
@@ -38,6 +39,7 @@ class RelatedContentPluginConfig(Config):
 
     # scoring
     max_related = config_options.Type(int, default=DEFAULT_MAX_RELATED)
+    max_manual_related = config_options.Type(int, default=DEFAULT_MAX_MANUAL_RELATED)
     min_score = config_options.Type(float, default=DEFAULT_MIN_SCORE)
     weight_by_tag_rarity = config_options.Type(
         bool, default=DEFAULT_WEIGHT_BY_TAG_RARITY

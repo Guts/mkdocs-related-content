@@ -24,8 +24,8 @@ from mkdocs.config import load_config
 from mkdocs.structure.files import get_files
 
 # plugin target
-from mkdocs_related_content.models import PageTagsEntry
-from mkdocs_related_content.util import Util
+from mkdocs_related_content.models import ManualLink, PageTagsEntry
+from mkdocs_related_content.util import Util, _parse_manual_links
 
 # #############################################################################
 # ########## Classes ###############
@@ -174,6 +174,34 @@ class TestUtilScoring(unittest.TestCase):
         self.assertEqual(related["a.md"], [(1.0, "b.md")])
         self.assertEqual(related["b.md"], [(1.0, "a.md")])
 
+    def test_compute_related_pages_excludes_own_manual_links_from_auto_pool(self):
+        """`a.md` manually pins `b.md` via `related_content.links`. Even
+        though they'd also score highly by tags, `b.md` must not appear a
+        second time in `a.md`'s *automatic* candidates -
+        `resolve_related_pages` is what actually shows the manual entry,
+        this is purely about not wasting an automatic slot on a duplicate.
+        """
+        index = {
+            "a.md": PageTagsEntry(
+                src_uri="a.md",
+                url="a/",
+                tags=["api", "auth"],
+                manual_links=(ManualLink(target="b.md"),),
+            ),
+            "b.md": PageTagsEntry(src_uri="b.md", url="b/", tags=["api", "auth"]),
+            "c.md": PageTagsEntry(src_uri="c.md", url="c/", tags=["api"]),
+        }
+
+        related = self.plg_utils.compute_related_pages(
+            tags_index=index, min_score=0.1, max_related=1
+        )
+
+        self.assertEqual(len(related["a.md"]), 1)
+        self.assertEqual(related["a.md"][0][1], "c.md")
+        # one-directional: b.md doesn't manually link a.md back, so
+        # a.md still shows up in b.md's own automatic candidates
+        self.assertEqual(related["b.md"], [(1.0, "a.md")])
+
     def test_compute_related_pages_respects_max_related(self):
         index = {
             "a.md": PageTagsEntry(src_uri="a.md", url="a/", tags=["api"]),
@@ -289,6 +317,295 @@ class TestUtilScoring(unittest.TestCase):
 
         self.assertEqual(resolved[0].title, "Resolved Mkdocs Title")
 
+    def test_resolve_related_pages_manual_links_appear_first(self):
+        """Manual links come before automatic ones, in the author's own
+        frontmatter order - regardless of automatic score.
+        """
+        index = {
+            "auto.md": PageTagsEntry(src_uri="auto.md", url="auto/", tags=["api"]),
+            "manual-1.md": PageTagsEntry(
+                src_uri="manual-1.md", url="m1/", tags=["api"]
+            ),
+            "manual-2.md": PageTagsEntry(
+                src_uri="manual-2.md", url="m2/", tags=["api"]
+            ),
+        }
+
+        class _FakeFile:
+            page = None
+            url = "fake/"
+
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return _FakeFile()  # every manual/auto src_uri "exists"
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[(1.0, "auto.md")],
+            tags_index=index,
+            current_tags={"api"},
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(
+                ManualLink(target="manual-1.md"),
+                ManualLink(target="manual-2.md"),
+            ),
+        )
+
+        self.assertEqual(
+            [r.title for r in resolved], ["manual-1.md", "manual-2.md", "auto.md"]
+        )
+        self.assertEqual([r.manual for r in resolved], [True, True, False])
+
+    def test_resolve_related_pages_label_wins_over_resolved_title(self):
+        """A manual link's own `label` always wins, even when the real
+        page title is available via `Page.title`.
+        """
+        index = {
+            "b.md": PageTagsEntry(
+                src_uri="b.md", url="b/", tags=["api"], fallback_title="Fallback"
+            ),
+        }
+
+        class _FakePage:
+            title = "Real Mkdocs Title"
+
+        class _FakeFile:
+            page = _FakePage()
+            url = "fake/"
+
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return _FakeFile()
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[],
+            tags_index=index,
+            current_tags={"api"},
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(ManualLink(target="b.md", label="My Own Label"),),
+        )
+
+        self.assertEqual(resolved[0].title, "My Own Label")
+
+    def test_resolve_related_pages_external_manual_link(self):
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return None
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[],
+            tags_index={},
+            current_tags=set(),
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(ManualLink(target="https://example.org/resource/"),),
+        )
+
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(resolved[0].title, "https://example.org/resource/")
+        self.assertEqual(resolved[0].url, "https://example.org/resource/")
+        self.assertEqual(resolved[0].shared_tags, [])
+        self.assertEqual(resolved[0].score, 1.0)
+        self.assertTrue(resolved[0].manual)
+
+    def test_resolve_related_pages_external_manual_link_with_label(self):
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return None
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[],
+            tags_index={},
+            current_tags=set(),
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(
+                ManualLink(target="https://example.org/resource/", label="Clean Label"),
+            ),
+        )
+
+        self.assertEqual(resolved[0].title, "Clean Label")
+        self.assertEqual(resolved[0].url, "https://example.org/resource/")
+
+    def test_resolve_related_pages_broken_manual_link_is_skipped(self):
+        """A `related_content.links` entry pointing to a page that doesn't
+        exist must be skipped, not crash the build.
+        """
+
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return None
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[],
+            tags_index={},
+            current_tags=set(),
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(ManualLink(target="this-page-does-not-exist.md"),),
+        )
+
+        self.assertEqual(resolved, [])
+
+    def test_resolve_related_pages_respects_max_manual_related(self):
+        index = {
+            f"m{i}.md": PageTagsEntry(src_uri=f"m{i}.md", url=f"m{i}/", tags=["api"])
+            for i in range(4)
+        }
+
+        class _FakeFile:
+            page = None
+            url = "fake/"
+
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return _FakeFile()
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[],
+            tags_index=index,
+            current_tags={"api"},
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=tuple(ManualLink(target=t) for t in index),
+            max_manual_related=2,
+        )
+
+        self.assertEqual(len(resolved), 2)
+
+    def test_resolve_related_pages_auto_budget_shrinks_with_manual_count(self):
+        """`max_related` is the *combined* total: 2 manual links leave
+        only 1 slot for automatic candidates, even though 2 are available.
+        """
+        index = {
+            "manual-1.md": PageTagsEntry(
+                src_uri="manual-1.md", url="m1/", tags=["api"]
+            ),
+            "manual-2.md": PageTagsEntry(
+                src_uri="manual-2.md", url="m2/", tags=["api"]
+            ),
+            "auto-1.md": PageTagsEntry(src_uri="auto-1.md", url="a1/", tags=["api"]),
+            "auto-2.md": PageTagsEntry(src_uri="auto-2.md", url="a2/", tags=["api"]),
+        }
+
+        class _FakeFile:
+            page = None
+            url = "fake/"
+
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return _FakeFile()
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[(0.9, "auto-1.md"), (0.8, "auto-2.md")],
+            tags_index=index,
+            current_tags={"api"},
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(
+                ManualLink(target="manual-1.md"),
+                ManualLink(target="manual-2.md"),
+            ),
+            max_related=3,
+        )
+
+        self.assertEqual(len(resolved), 3)
+        self.assertEqual(
+            [r.title for r in resolved], ["manual-1.md", "manual-2.md", "auto-1.md"]
+        )
+
+    def test_resolve_related_pages_no_duplicate_between_manual_and_auto(self):
+        """Even if `related` (automatic candidates) somehow still contains
+        a src_uri that's also manually linked, it must not be shown twice.
+        """
+        index = {
+            "shared.md": PageTagsEntry(src_uri="shared.md", url="s/", tags=["api"]),
+        }
+
+        class _FakeFile:
+            page = None
+            url = "fake/"
+
+        class _FakeFiles:
+            def get_file_from_path(self, path):
+                return _FakeFile()
+
+        resolved = self.plg_utils.resolve_related_pages(
+            related=[(1.0, "shared.md")],
+            tags_index=index,
+            current_tags={"api"},
+            files=_FakeFiles(),
+            current_page_url="current/",
+            manual_links=(ManualLink(target="shared.md"),),
+        )
+
+        self.assertEqual(len(resolved), 1)
+        self.assertTrue(resolved[0].manual)
+
+
+class TestParseManualLinks(unittest.TestCase):
+    """Test `_parse_manual_links` in isolation - the `nav`-like syntax
+    parsing for `related_content.links`, independent of any file I/O.
+    """
+
+    def test_bare_string_has_no_label(self):
+        parsed = _parse_manual_links(["some-page.md"], self_src_uri="current.md")
+        self.assertEqual(parsed, (ManualLink(target="some-page.md", label=None),))
+
+    def test_single_key_mapping_sets_label(self):
+        parsed = _parse_manual_links(
+            [{"Custom label": "some-page.md"}], self_src_uri="current.md"
+        )
+        self.assertEqual(
+            parsed, (ManualLink(target="some-page.md", label="Custom label"),)
+        )
+
+    def test_mixed_shapes_preserve_order(self):
+        parsed = _parse_manual_links(
+            ["a.md", {"B label": "b.md"}, "https://example.org/c/"],
+            self_src_uri="current.md",
+        )
+        self.assertEqual(
+            parsed,
+            (
+                ManualLink(target="a.md"),
+                ManualLink(target="b.md", label="B label"),
+                ManualLink(target="https://example.org/c/"),
+            ),
+        )
+
+    def test_nested_section_is_skipped(self):
+        """A mapping whose value is a list (blog plugin's nav-like
+        sections) isn't supported for a flat related-content list.
+        """
+        parsed = _parse_manual_links(
+            [{"Section": ["a.md", "b.md"]}, "c.md"], self_src_uri="current.md"
+        )
+        self.assertEqual(parsed, (ManualLink(target="c.md"),))
+
+    def test_multi_key_mapping_is_skipped(self):
+        """Ambiguous - which key is the label? - so skipped entirely."""
+        parsed = _parse_manual_links(
+            [{"Label 1": "a.md", "Label 2": "b.md"}, "c.md"],
+            self_src_uri="current.md",
+        )
+        self.assertEqual(parsed, (ManualLink(target="c.md"),))
+
+    def test_unexpected_type_is_skipped(self):
+        parsed = _parse_manual_links([123, "a.md"], self_src_uri="current.md")
+        self.assertEqual(parsed, (ManualLink(target="a.md"),))
+
+    def test_self_reference_is_dropped(self):
+        parsed = _parse_manual_links(["current.md", "a.md"], self_src_uri="current.md")
+        self.assertEqual(parsed, (ManualLink(target="a.md"),))
+
+    def test_duplicate_target_keeps_first_occurrence(self):
+        parsed = _parse_manual_links(
+            [{"First": "a.md"}, {"Second": "a.md"}], self_src_uri="current.md"
+        )
+        self.assertEqual(parsed, (ManualLink(target="a.md", label="First"),))
+
 
 class TestUtilTagsIndex(unittest.TestCase):
     """Test `build_tags_index` and `write_tags_json` against a real,
@@ -368,6 +685,53 @@ class TestUtilTagsIndex(unittest.TestCase):
         index = self.plg_utils.build_tags_index(files=self.files)
 
         self.assertIn("page-malformed-related-content.md", index)
+
+    def test_build_tags_index_parses_manual_links_with_labels(self):
+        index = self.plg_utils.build_tags_index(files=self.files)
+
+        self.assertEqual(
+            index["page-with-manual-links.md"].manual_links,
+            (
+                ManualLink(target="page-c.md", label=None),
+                ManualLink(target="page-d.md", label="Custom label"),
+                ManualLink(target="https://example.org/external-resource/", label=None),
+                ManualLink(
+                    target="https://example.org/other-resource/",
+                    label="Clean external label",
+                ),
+            ),
+        )
+        self.assertEqual(index["page-a.md"].manual_links, ())
+
+    def test_build_tags_index_keeps_tagless_page_with_manual_links_only(self):
+        index = self.plg_utils.build_tags_index(files=self.files)
+
+        entry = index["tagless-page-with-manual-links-only.md"]
+        self.assertEqual(entry.tags, [])
+        self.assertIn(ManualLink(target="page-a.md"), entry.manual_links)
+
+    def test_build_tags_index_manual_links_excludes_self_reference(self):
+        index = self.plg_utils.build_tags_index(files=self.files)
+
+        targets = [
+            link.target
+            for link in index["tagless-page-with-manual-links-only.md"].manual_links
+        ]
+        self.assertNotIn("tagless-page-with-manual-links-only.md", targets)
+
+    def test_build_tags_index_manual_links_keeps_broken_reference(self):
+        """A nonexistent page in `related_content.links` isn't validated
+        against the Files collection at index time - only parsed here.
+        It's `resolve_related_pages` that later looks it up and skips it
+        gracefully - see the dedicated test in `test_build.py`.
+        """
+        index = self.plg_utils.build_tags_index(files=self.files)
+
+        targets = [
+            link.target
+            for link in index["tagless-page-with-manual-links-only.md"].manual_links
+        ]
+        self.assertIn("this-page-does-not-exist.md", targets)
 
     def test_write_tags_json_shape(self):
         index = self.plg_utils.build_tags_index(files=self.files)
