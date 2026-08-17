@@ -16,6 +16,7 @@ MKDOCS_LOGGER_NAME: str = "[related-content]"
 # default plugin option values
 DEFAULT_CSS_CLASS: str = "related-pages"
 DEFAULT_MATCH_PATH: str = ".*"
+DEFAULT_MAX_MANUAL_RELATED: int = 5
 DEFAULT_MAX_RELATED: int = 5
 DEFAULT_MIN_SCORE: float = 0.1
 DEFAULT_SECTION_TITLE: str = "Related contents"
@@ -27,11 +28,17 @@ DEFAULT_WEIGHT_BY_TAG_RARITY: bool = False
 # `util.Util._guess_title` for how (and why) it's used.
 FIRST_HEADING_PATTERN: str = r"^#\s+(.+?)\s*$"
 
-# per-page frontmatter opt-out, e.g.:
+# per-page frontmatter, e.g.:
 #   related_content:
 #     exclude_from_scoring: true
+#     links:
+#       - some-page.md
+#       - Custom label: some-other-page.md
+#       - https://example.org/some-external-resource/
+#       - Clean label: https://example.org/some-other-resource/
 FRONTMATTER_KEY: str = "related_content"
 FRONTMATTER_EXCLUDE_FROM_SCORING_KEY: str = "exclude_from_scoring"
+FRONTMATTER_LINKS_KEY: str = "links"
 
 # unused for now, kept for parity with plugins (like mkdocs-rss-plugin) that
 # cache heavier computations across builds

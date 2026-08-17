@@ -170,6 +170,81 @@ class TestBuildRelatedContent(BaseTest):
             )
             self.assertEqual(_extract_related_section(excluded_html), "")
 
+    def test_manual_links_take_priority_with_labels_and_combine_with_automatic(self):
+        """`page-with-manual-links.md` hand-picks 4 manual links (mixing
+        bare targets and `{label: target}`, internal and external), and
+        also shares the `oauth` tag with `page-b.md` (one automatic
+        candidate). All five must show up, manual ones first and in the
+        author's own order, custom labels used exactly as given.
+        """
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            testproject_path = self.setup_clean_mkdocs_folder(
+                mkdocs_yml_filepath=Path("tests/fixtures/mkdocs_minimal.yml"),
+                output_path=Path(tmpdirname),
+            )
+            site_dir = Path(tmpdirname) / "site"
+            cli_result = self.build_docs_setup(
+                mkdocs_yml_filepath=testproject_path / "mkdocs.yml",
+                output_path=site_dir,
+                strict=True,
+            )
+            self._assert_build_succeeded(cli_result)
+
+            html = (site_dir / "page-with-manual-links" / "index.html").read_text(
+                encoding="utf-8"
+            )
+            related_section = _extract_related_section(html)
+            items = re.findall(r"<li>.*?</li>", related_section, re.DOTALL)
+
+            def _href(item):
+                m = re.search(r'href="([^"]*)"', item)
+                return m.group(1) if m else None
+
+            hrefs = [_href(item) for item in items]
+
+            # order: page-c, page-d, external-1, external-2 (manual, in
+            # frontmatter order), then page-b (automatic)
+            pos_c = next(i for i, h in enumerate(hrefs) if h and "page-c/" in h)
+            pos_d = next(i for i, h in enumerate(hrefs) if h and "page-d/" in h)
+            pos_ext1 = hrefs.index("https://example.org/external-resource/")
+            pos_ext2 = hrefs.index("https://example.org/other-resource/")
+            pos_b = next(i for i, h in enumerate(hrefs) if h and "page-b/" in h)
+            self.assertLess(pos_c, pos_d)
+            self.assertLess(pos_d, pos_ext1)
+            self.assertLess(pos_ext1, pos_ext2)
+            self.assertLess(pos_ext2, pos_b)
+
+            # custom labels used as-is; the bare entries fall back to the
+            # real/resolved title instead
+            self.assertIn(">Custom label<", items[pos_d])
+            self.assertIn(">Clean external label<", items[pos_ext2])
+            self.assertIn("manual=True", items[pos_c])
+            self.assertIn("manual=False", items[pos_b])
+
+    def test_tagless_page_with_manual_links_builds_without_error(self):
+        """A page with `related_content.links` but no `tags` (and one
+        broken, nonexistent reference among them) must build cleanly: the
+        broken entry is silently skipped, the valid one still shows up.
+        """
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            testproject_path = self.setup_clean_mkdocs_folder(
+                mkdocs_yml_filepath=Path("tests/fixtures/mkdocs_minimal.yml"),
+                output_path=Path(tmpdirname),
+            )
+            site_dir = Path(tmpdirname) / "site"
+            cli_result = self.build_docs_setup(
+                mkdocs_yml_filepath=testproject_path / "mkdocs.yml",
+                output_path=site_dir,
+                strict=True,
+            )
+            self._assert_build_succeeded(cli_result)
+
+            html = (
+                site_dir / "tagless-page-with-manual-links-only" / "index.html"
+            ).read_text(encoding="utf-8")
+            related_section = _extract_related_section(html)
+            self.assertIn("page-a/", related_section)
+
     def test_related_page_url_is_correctly_relative_for_nested_pages(self):
         """`sub/page-nested.md` is one level deep and shares the `api` tag
         with `page-a.md`. `RelatedPage.url` is computed relative to each
